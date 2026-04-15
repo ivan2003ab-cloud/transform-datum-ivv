@@ -1,9 +1,10 @@
 import "./globals.css";
 import DashboardLayout from "@/components/DashboardLayout/index";
+import { AuthProvider } from "@/context/AuthContext";
 
 export const metadata = {
-  title: "Dashboard",
-  description: "My Dashboard App",
+  title: "Transformasi Datum App",
+  description: "Aplikasi Transformasi Datum berbasis web",
 };
 
 export default function RootLayout({
@@ -14,9 +15,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <DashboardLayout>
-          {children}
-        </DashboardLayout>
+        <AuthProvider>
+          <DashboardLayout>
+            {children}
+          </DashboardLayout>
+        </AuthProvider>
       </body>
     </html>
   );

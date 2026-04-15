@@ -384,6 +384,12 @@ export default function AnalysisPage() {
         {data?.test?.global?.Xtabel?.toFixed(6)}
       </span>
     </div>
+    <button
+    onClick={closeModal}
+    className="px-4 py-2 bg-blue-900 text-white rounded hover:bg-blue-800"
+  >
+    Tutup
+  </button>
   </>
 )}
 

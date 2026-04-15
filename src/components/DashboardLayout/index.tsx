@@ -13,7 +13,8 @@ import {
   ChevronUp,
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 export default function DashboardLayout({
   children,
@@ -23,6 +24,8 @@ export default function DashboardLayout({
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const pathname = usePathname();
+  const { user, logout } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
     if (pathname.startsWith("/hitung_parameter")) {
@@ -46,10 +49,29 @@ export default function DashboardLayout({
         </div>
 
         <div className="flex items-center gap-3">
-          <span className="text-sm opacity-90">Hi, Your Name </span>
-          <div className="w-8 h-8 rounded-full bg-white text-blue-700 flex items-center justify-center text-sm font-semibold">
-            I
-          </div>
+          {user ? (
+            <>
+              <span className="text-sm opacity-90">
+                Hi, {user.name}
+              </span>
+              <div className="w-8 h-8 rounded-full bg-white text-blue-700 flex items-center justify-center text-sm font-semibold">
+                {user.name[0].toUpperCase()}
+              </div>
+              <button
+                onClick={logout}
+                className="ml-2 text-xs bg-white text-blue-900 px-2 py-1 rounded hover:bg-gray-100"
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => router.push("/login")}
+              className="text-sm bg-white text-blue-900 px-3 py-1 rounded"
+            >
+            Login
+            </button>
+          )}
         </div>
       </div>
 
@@ -63,7 +85,7 @@ export default function DashboardLayout({
           {/* USER */}
           {sidebarOpen && (
             <div className="px-4 py-4 border-b border-gray-300 font-semibold text-sm">
-              Login
+              {user ? user.name : "Guest"}
             </div>
           )}
 
