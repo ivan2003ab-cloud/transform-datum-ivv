@@ -25,6 +25,6 @@ export async function POST(req: Request) {
   }
 
   const token = jwt.sign({ id: user.id }, SECRET, { expiresIn: "1d" });
-
+  console.log("DATABASE_URL:", process.env.DATABASE_URL);
   return NextResponse.json({ token, user });
 }
