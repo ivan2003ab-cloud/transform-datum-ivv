@@ -3,8 +3,10 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { NextResponse } from "next/server";
 
-const SECRET = "RAHASIA";
+const SECRET = process.env.JWT_SECRET!;
+
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 export async function POST(req: Request) {
   const { email, password } = await req.json();
 
