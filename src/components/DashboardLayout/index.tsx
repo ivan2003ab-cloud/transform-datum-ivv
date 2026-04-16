@@ -147,7 +147,7 @@ export default function DashboardLayout({
             <NavItem
               icon={<List size={18} />}
               label="Parameter Saya"
-              href="/parameter"
+              href="/parameter_saya"
               sidebarOpen={sidebarOpen}
             />
 

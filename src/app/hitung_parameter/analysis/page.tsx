@@ -238,8 +238,8 @@ export default function AnalysisPage() {
 
           snooping: {
             v: data?.adj?.v,
-            vVar: data?.test?.snoop?.sqrtDiag,
-            w: data?.test?.snoop?.result,
+            std: data?.test?.snoop?.sqrtDiag,
+            result: data?.test?.snoop?.result,
           },
 
           parameter: {
