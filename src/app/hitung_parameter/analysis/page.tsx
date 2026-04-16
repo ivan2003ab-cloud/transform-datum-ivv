@@ -205,6 +205,62 @@ export default function AnalysisPage() {
     router.push("/transformasi/input"); 
   };
   
+
+  const handleSave = async () => {
+  try {
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    const raw = JSON.parse(localStorage.getItem("rawInput") || "[]");
+
+    if (!user?.id) {
+      alert("Login dulu!");
+      return;
+    }
+
+    const res = await fetch("/api/project/save", {
+      method: "POST",
+      headers: {
+          "Content-Type": "application/json",
+        },
+      body: JSON.stringify({
+          name: `Perhitungan ${new Date().toLocaleString()}`,
+          metode,
+          userId: user.id,
+
+          rawData: raw,
+
+          globalTest: {
+            result: data?.test?.global?.result,
+            aposteriori: data?.test?.global?.aposteriori,
+            Xhitung: data?.test?.global?.Xhitung,
+            Xtabel: data?.test?.global?.Xtabel,
+
+          },
+
+          snooping: {
+            v: data?.adj?.v,
+            vVar: data?.test?.snoop?.sqrtDiag,
+            w: data?.test?.snoop?.result,
+          },
+
+          parameter: {
+            params: data?.adj?.params,
+            xVar: data?.adj?.xVar,
+            signif: data?.test?.signif?.result,
+          },
+        }),
+      });
+
+      if (res.ok) {
+        alert("Berhasil disimpan 🎉");
+      } else {
+        alert("Gagal");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error");
+    }
+  };
+
   const renderTable = (matrix: number[][]) => {
     if (!matrix) return null;
 
@@ -324,7 +380,16 @@ export default function AnalysisPage() {
                 ))}
               </tbody>
             </table>
-          <div className="flex justify-end mt-4">
+          <div className="flex justify-between mt-4">
+
+            <button
+              onClick={handleSave}
+              className="px-6 py-2 bg-green-600 text-white rounded-xl hover:bg-green-500"
+            >
+              Simpan Hasil
+            </button>
+
+
             <button
               onClick={handleToTransform}
               className="px-6 py-2 bg-blue-900 text-white rounded-xl hover:bg-blue-800"

@@ -19,3 +19,16 @@ model User {
   password  String
   createdAt DateTime @default(now())
 }
+
+model Project {
+  id        String   @id @default(uuid())
+  name      String
+  metode    String
+  userId    String
+  createdAt DateTime @default(now())
+
+  rawData    Json
+  globalTest Json
+  snooping   Json
+  parameter  Json
+}
