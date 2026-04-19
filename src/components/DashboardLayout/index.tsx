@@ -40,12 +40,14 @@ export default function DashboardLayout({
   };
 
   return (
-    <div className="flex flex-col h-screen w-full bg-gray-50">
+    <div className="flex flex-col h-screen w-full bg-white">
       {/* HEADER */}
       <div className="flex items-center justify-between h-16 bg-blue-900 text-white px-6 border-b border-blue-800 shrink-0">
         <div className="flex items-center gap-3">
           <Image src="/logo.png" alt="Logo" width={40} height={40} />
-          <span className="font-semibold">Transformasi Datum</span>
+          <Link className="font-semibold" href="/">
+            Transformasi Datum
+          </Link>
         </div>
 
         <div className="flex items-center gap-3">
@@ -161,7 +163,7 @@ export default function DashboardLayout({
         </aside>
 
         {/* CONTENT */}
-        <main className="flex-1 p-6 bg-gray-200 overflow-auto">
+        <main className="flex-1 p-6 bg-white overflow-auto">
           {children}
         </main>
       </div>

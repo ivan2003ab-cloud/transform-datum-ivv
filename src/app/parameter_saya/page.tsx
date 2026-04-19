@@ -9,7 +9,8 @@ export default function ParameterSayaPage() {
   const router = useRouter();
 
   useEffect(() => {
-    fetch("/api/project/list")
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    fetch(`/api/project/list?userId=${user.id}`)
       .then((res) => res.json())
       .then((data) => setProjects(data));
   }, []);
@@ -23,8 +24,9 @@ export default function ParameterSayaPage() {
       "hasil",
       JSON.stringify({
         adj: {
-          params: project.parameter.values,
-          xVar: project.parameter.covariance,
+          params: project.parameter.params,
+          xVar: project.parameter.xVar,
+          v: project.snooping.v,
         },
         test: {
           global: project.globalTest,
@@ -79,21 +81,36 @@ export default function ParameterSayaPage() {
                     <tr>
                       <th className="border p-2">Parameter</th>
                       <th className="border p-2">Nilai</th>
+                      <th className="border p-2">Simpangan Baku</th>
                     </tr>
                   </thead>
 
                   <tbody>
-                    {proj.parameter?.values?.map((p: any, i: number) => (
-                      <tr key={i} className="text-center">
-                        <td className="border p-2">
-                          {["Tx", "Ty", "Tz", "Rx", "Ry", "Rz", "S"][i]}
-                        </td>
-                        <td className="border p-2">
-                          {p[0]?.toFixed(6)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
+  {proj.parameter?.params?.map((p: any, i: number) => {
+    const value = i === 6 ? p[0] + 1 : p[0]; // 👉
+
+    const variance = proj.parameter?.xVar?.[i]?.[i] || 0;
+    const std = Math.sqrt(variance);
+
+    return (
+      <tr key={i} className="text-center">
+        <td className="border p-2">
+          {["Tx", "Ty", "Tz", "Rx", "Ry", "Rz", "S"][i]}
+        </td>
+
+        {/* NILAI */}
+        <td className="border p-2">
+          {value?.toFixed(6)}
+        </td>
+
+        {/* SIMPANGAN BAKU */}
+        <td className="border p-2">
+          {std?.toFixed(6)}
+        </td>
+      </tr>
+    );
+  })}
+</tbody>
                 </table>
 
                 {/* GLOBAL TEST STATUS */}

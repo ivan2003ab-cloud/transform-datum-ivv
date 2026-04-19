@@ -122,9 +122,9 @@ console.log("r23:", r23);
 console.log("r31:", r31);
 console.log("r32:", r32);
 console.log("r33:", r33);
-      const x2 = s * (r11 * x1 + r21 * y1 + r31 * z1) + tx;
-      const y2 = s * (r12 * x1 + r22 * y1 + r32 * z1) + ty;
-      const z2 = s * (r13 * x1 + r23 * y1 + r33 * z1) + tz;
+      const x2 = s * (r11 * x1) + tx;
+      const y2 = s * (r22 * y1) + ty;
+      const z2 = s * (r33 * z1) + tz;
 
       return { ...p, x2, y2, z2 };
     });

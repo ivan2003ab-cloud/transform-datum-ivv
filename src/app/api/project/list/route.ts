@@ -4,10 +4,22 @@ import { NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    const { searchParams } = new URL(req.url);
+    const userId = searchParams.get("userId");
+
+    if (!userId) {
+      return NextResponse.json({ error: "No userId" }, { status: 400 });
+    }
+
     const projects = await prisma.project.findMany({
-      orderBy: { createdAt: "desc" },
+      where: {
+        userId: userId,
+      },
+      orderBy: {
+        createdAt: "desc", 
+      },
     });
 
     return NextResponse.json(projects);

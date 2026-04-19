@@ -20,6 +20,8 @@ export default function AnalysisPage() {
   const [metode, setMetode] = useState<string | null>(null);
   const [pointList, setPointList] = useState<string[]>([]);
   const [selectedPoints, setSelectedPoints] = useState<string[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     const stored = localStorage.getItem("hasil");
@@ -97,7 +99,7 @@ export default function AnalysisPage() {
   }));
 
   const finalRows = [...snoopData, ...unselectedRows];
-    const formatParameter = () => {
+  const formatParameter = () => {
     const params = data?.adj?.params || [];
     const xVar = data?.adj?.xVar || [];
     const signif = data?.test?.signif?.result || [];
@@ -207,12 +209,15 @@ export default function AnalysisPage() {
   
 
   const handleSave = async () => {
+    if (saving || saved) return;
   try {
+    setSaving(true);
     const user = JSON.parse(localStorage.getItem("user") || "{}");
     const raw = JSON.parse(localStorage.getItem("rawInput") || "[]");
 
     if (!user?.id) {
-      alert("Login dulu!");
+      alert("Anda harus login untuk menyimpan hasil");
+      setSaving(false);
       return;
     }
 
@@ -251,13 +256,17 @@ export default function AnalysisPage() {
       });
 
       if (res.ok) {
-        alert("Berhasil disimpan 🎉");
+        alert("Berhasil disimpan");
+        setSaved(true);
       } else {
         alert("Gagal");
       }
     } catch (err) {
       console.error(err);
       alert("Error");
+    }
+      finally {
+        setSaving(false);
     }
   };
 
@@ -384,9 +393,25 @@ export default function AnalysisPage() {
 
             <button
               onClick={handleSave}
-              className="px-6 py-2 bg-green-600 text-white rounded-xl hover:bg-green-500"
+              disabled={saving || saved}
+              className={`px-6 py-2 rounded-xl text-white transition ${
+                saved
+                ? "bg-green-400 cursor-not-allowed"
+                : saving
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-green-600 hover:bg-green-500"
+              }`}
             >
-              Simpan Hasil
+              {saved ? (
+                "Tersimpan"
+              ) : saving ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Menyimpan...
+                  </div>
+              ) : (
+                "Simpan Hasil"
+              )}
             </button>
 
 

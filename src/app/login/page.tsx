@@ -10,20 +10,41 @@ export default function LoginPage() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      body: JSON.stringify({ email, password }),
-    });
+    if (loading) return;
 
-    const data = await res.json();
+    setLoading(true);
 
-    if (data.token) {
-      login(data);
-      router.push("/");
-    } else {
-      alert(data.error);
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+
+      if (data.token) {
+        login(data);
+        router.push("/");
+      } else {
+        alert(data.error);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Terjadi kesalahan");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleLogin();
     }
   };
 
@@ -36,6 +57,7 @@ export default function LoginPage() {
           className="w-full mb-3 p-2 border rounded"
           placeholder="Email"
           onChange={(e) => setEmail(e.target.value)}
+          onKeyDown={handleKeyDown}
         />
 
         <input
@@ -43,13 +65,26 @@ export default function LoginPage() {
           className="w-full mb-4 p-2 border rounded"
           placeholder="Password"
           onChange={(e) => setPassword(e.target.value)}
+          onKeyDown={handleKeyDown}
         />
 
         <button
           onClick={handleLogin}
-          className="w-full bg-blue-900 text-white py-2 rounded-lg"
+          disabled={loading}
+          className={`w-full py-2 rounded-lg text-white transition ${
+            loading
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-blue-900 hover:bg-blue-800"
+          }`}
         >
-          Login
+          {loading ? (
+            <div className="flex items-center justify-center gap-2">
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              Loading...
+            </div>
+          ) : (
+            "Login"
+          )}
         </button>
 
         <p className="mt-3 text-sm">
