@@ -37,47 +37,35 @@ export default function InputPage() {
 
     let formatted: any[] = [];
 
-// =========================
-// CARTESIAN
-// =========================
-if (struktur === "cartesian") {
-  formatted = json.map((row: any) => ({
-    point: row.Point,
-    x1: row.X1,
-    y1: row.Y1,
-    z1: row.Z1,
-    x2: row.X2,
-    y2: row.Y2,
-    z2: row.Z2,
+    if (struktur === "cartesian") {
+      formatted = json.map((row: any) => ({
+        point: row.Point,
+        x1: row.X1,
+        y1: row.Y1,
+        z1: row.Z1,
+        x2: row.X2,
+        y2: row.Y2,
+        z2: row.Z2,
+        sx2: row.SX2,
+        sy2: row.SY2,
+        sz2: row.SZ2,
+      }));
+    } else {
+      const geo = json.map((row: any) => ({
+        point: row.Point,
+        lat1: row.Lat1,
+        lon1: row.Lon1,
+        h1: row.H1,
+        lat2: row.Lat2,
+        lon2: row.Lon2,
+        h2: row.H2,
+        sx2: row.SX2,
+        sy2: row.SY2,
+        sz2: row.SZ2,
+      }));
 
-    sx2: row.SX2,
-    sy2: row.SY2,
-    sz2: row.SZ2,
-  }));
-}
-
-// =========================
-// DD & DMS (GEODETIC)
-// =========================
-else {
-  const geo = json.map((row: any) => ({
-    point: row.Point,
-
-    lat1: row.Lat1,
-    lon1: row.Lon1,
-    h1: row.H1,
-
-    lat2: row.Lat2,
-    lon2: row.Lon2,
-    h2: row.H2,
-
-    sx2: row.SX2,
-    sy2: row.SY2,
-    sz2: row.SZ2,
-  }));
-
-  formatted = normalizeToCartesian(geo, struktur);
-}
+      formatted = normalizeToCartesian(geo, struktur);
+    }
 
     setParsedData(formatted);
     const pointList = formatted.map((item) => item.point);
@@ -85,138 +73,134 @@ else {
   };
 
   const downloadTemplate = (type: string) => {
-  let data: any[] = [];
+    let data: any[] = [];
 
-  if (type === "cartesian") {
-    data = [
-      {
-        Point: 1,
-        X1: 0,
-        Y1: 0,
-        Z1: 0,
-        X2: 0,
-        Y2: 0,
-        Z2: 0,
-        SX2: "",
-        SY2: "",
-        SZ2: "",
-      },
-    ];
-  } else if (type === "geodetic") {
-    data = [
-      {
-        Point: 1,
-        Lat1: 0,
-        Lon1: 0,
-        H1: 0,
-        Lat2: 0,
-        Lon2: 0,
-        H2: 0,
-        SX2: "",
-        SY2: "",
-        SZ2: "",
-      },
-    ];
-  }
+    if (type === "cartesian") {
+      data = [
+        {
+          Point: 1,
+          X1: 0,
+          Y1: 0,
+          Z1: 0,
+          X2: 0,
+          Y2: 0,
+          Z2: 0,
+          SX2: "",
+          SY2: "",
+          SZ2: "",
+        },
+      ];
+    } else {
+      data = [
+        {
+          Point: 1,
+          Lat1: 0,
+          Lon1: 0,
+          H1: 0,
+          Lat2: 0,
+          Lon2: 0,
+          H2: 0,
+          SX2: "",
+          SY2: "",
+          SZ2: "",
+        },
+      ];
+    }
 
-  const worksheet = XLSX.utils.json_to_sheet(data);
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Template");
+    XLSX.writeFile(workbook, `template_${type}.xlsx`);
 
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Template");
+    setShowTemplatePopup(false);
+  };
 
-  XLSX.writeFile(workbook, `template_${type}.xlsx`);
-
-  setShowTemplatePopup(false);
-};
-
-  // HANDLE PROSES 
   const handleProses = async () => {
-  if (!parsedData || parsedData.length === 0) {
-    alert("Upload file dahulu sebelum memproses.");
-    return;
-  }
+    if (!parsedData || parsedData.length === 0) {
+      alert("Upload file dahulu sebelum memproses.");
+      return;
+    }
 
-  try {
-    setLoading(true);
+    try {
+      setLoading(true);
 
-    
-    const result = await runAdjustment(parsedData, metode);
+      const result = await runAdjustment(parsedData, metode);
 
-    // simpan raw
-    localStorage.setItem("rawInput", JSON.stringify(parsedData));
+      localStorage.setItem("rawInput", JSON.stringify(parsedData));
+      localStorage.setItem("hasil", JSON.stringify(result));
+      localStorage.setItem("metode", metode);
 
-    // simpan hasil
-    localStorage.setItem("hasil", JSON.stringify(result));
-    localStorage.setItem("metode", metode);
+      router.push("/hitung_parameter/analysis");
+    } catch (err) {
+      console.error(err);
+      alert("Error saat memproses data.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    router.push("/hitung_parameter/analysis");
-  } catch (err) {
-    console.error(err);
-    alert("Error saat memproses data. Pastikan format file benar dan coba lagi.");
-  } finally {
-    setLoading(false);
-  }
-};
   const strukturOptions = [
     { value: "cartesian", label: "Cartesian" },
     { value: "dd", label: "Geodetik (DD.DDDDD)" },
     { value: "dms", label: "Geodetik (DD.MMSSSS)" },
   ];
+
   const metodeOptions = [
-  { value: "bursa", label: "Bursa-Wolf" },
-  { value: "molodensky", label: "Molodensky Badekas" },
+    { value: "bursa", label: "Bursa-Wolf" },
+    { value: "molodensky", label: "Molodensky Badekas" },
   ];
+
   return (
     <div className="p-6 space-y-6">
       {/* MAP */}
-      <div className="rounded-3xl h-[300px] overflow-hidden">
-  {showMap ? (
-    <MapParamInput data={parsedData} struktur={struktur} />
-  ) : (
-    <div className="flex items-center justify-center h-full text-gray-400">
-      Klik "Preview Map" untuk menampilkan titik
-    </div>
-  )}
-</div>
+      <div className="rounded-3xl h-[300px] overflow-hidden border border-gray-200">
+        {showMap ? (
+          <MapParamInput data={parsedData} struktur={struktur} />
+        ) : (
+          <div className="flex items-center justify-center h-full text-gray-400">
+            Klik "Preview Map"
+          </div>
+        )}
+      </div>
 
       {/* INPUT */}
-      <div className="bg-blue-900/10 rounded-xl px-4 py-3 flex items-center justify-between">
-        <span className="text-sm font-medium text-blue-900">Input data</span>
+      <div className="bg-gradient-to-r from-blue-100 to-emerald-100 rounded-xl px-4 py-3 flex items-center justify-between">
+        <span className="text-sm font-medium text-blue-900">
+          Input data
+        </span>
 
         <div className="flex gap-3">
           <button
             onClick={() => setShowTemplatePopup(true)}
-            className="px-6 py-2 rounded-full bg-blue-800 text-white hover:bg-blue-900"
+            className="px-6 py-2 rounded-full bg-emerald-600 text-white hover:opacity-90"
           >
             Template
           </button>
 
-          <label className="px-6 py-2 rounded-full bg-blue-500 text-white hover:bg-blue-600 cursor-pointer">
+          <label className="px-6 py-2 rounded-full bg-emerald-800 text-white hover:opacity-90 cursor-pointer">
             Upload
             <input type="file" className="hidden" onChange={handleFileChange} />
           </label>
         </div>
-        
       </div>
 
-      <div className="flex items-center justify-between mt-3">
-  {/* kiri */}
-  {fileName && (
-    <div className="text-sm text-gray-600">
-      {fileName} ({parsedData.length} titik)
-    </div>
-  )}
+      {/* FILE INFO */}
+      <div className="flex items-center justify-between">
+        {fileName && (
+          <div className="text-sm text-gray-600">
+            {fileName} ({parsedData.length} titik)
+          </div>
+        )}
 
-  {/* kanan */}
-  {fileName && (
-    <button
-      onClick={() => setShowMap(true)}
-      className="px-6 py-2 rounded-full bg-green-600 text-white hover:bg-green-700"
-    >
-      Preview Map
-    </button>
-  )}
-</div>
+        {fileName && (
+          <button
+            onClick={() => setShowMap(true)}
+            className="px-6 py-2 rounded-full bg-gradient-to-r from-green-500 to-emerald-400 text-white hover:opacity-90"
+          >
+            Preview Map
+          </button>
+        )}
+      </div>
 
       {/* STRUKTUR */}
       <div>
@@ -245,7 +229,6 @@ else {
         </h2>
 
         <div className="grid grid-cols-3 gap-6">
-          
           {metodeOptions.map((item) => (
             <label key={item.value} className="flex items-center gap-2">
               <input
@@ -264,43 +247,45 @@ else {
         <button
           onClick={handleProses}
           disabled={loading}
-          className="px-8 py-3 rounded-xl bg-blue-900 text-white font-semibold hover:bg-blue-800 disabled:bg-gray-400"
+          className="px-8 py-3 rounded-xl bg-emerald-800 text-white font-semibold hover:opacity-90 disabled:bg-gray-400"
         >
           {loading ? "Memproses..." : "Proses"}
         </button>
       </div>
+
+      {/* POPUP */}
       {showTemplatePopup && (
-  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-    <div className="bg-white rounded-2xl p-6 w-[350px] space-y-4 shadow-xl">
-      <h2 className="text-lg font-semibold text-blue-900">
-        Pilih Template
-      </h2>
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-6 w-[350px] space-y-4 shadow-xl">
+            <h2 className="text-lg font-semibold text-blue-900">
+              Pilih Template
+            </h2>
 
-      <div className="flex flex-col gap-3">
-        <button
-          onClick={() => downloadTemplate("cartesian")}
-          className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
-        >
-          Cartesian (XYZ)
-        </button>
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => downloadTemplate("cartesian")}
+                className="px-4 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-emerald-500 text-white hover:opacity-90"
+              >
+                Cartesian (XYZ)
+              </button>
 
-        <button
-          onClick={() => downloadTemplate("dd")}
-          className="px-4 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600"
-        >
-          Geodetik (Degree)
-        </button>
-      </div>
+              <button
+                onClick={() => downloadTemplate("dd")}
+                className="px-4 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-emerald-400 text-white hover:opacity-90"
+              >
+                Geodetik (Degree)
+              </button>
+            </div>
 
-      <button
-        onClick={() => setShowTemplatePopup(false)}
-        className="text-sm text-gray-500 hover:underline"
-      >
-        Batal
-      </button>
-    </div>
-  </div>
-)}
+            <button
+              onClick={() => setShowTemplatePopup(false)}
+              className="text-sm text-gray-500 hover:underline"
+            >
+              Batal
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

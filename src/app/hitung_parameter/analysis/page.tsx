@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { runAdjustment } from "@/lib/runAdjustment";
 import { ecefToGeodetic } from "@/lib/coordinateConverter";
 import { useRouter } from "next/navigation";
+import ResidualChart from "@/components/Chart/analysis";
 
 const MapParamAnalysis = dynamic(
   () => import("@/components/Map/mapParamAnalysis"),
@@ -19,9 +20,11 @@ export default function AnalysisPage() {
   const [data, setData] = useState<any>(null);
   const [metode, setMetode] = useState<string | null>(null);
   const [pointList, setPointList] = useState<string[]>([]);
+  const [viewMode, setViewMode] = useState<"map" | "chart">("map");
   const [selectedPoints, setSelectedPoints] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [projectName, setProjectName] = useState("");
 
   useEffect(() => {
     const stored = localStorage.getItem("hasil");
@@ -174,7 +177,7 @@ export default function AnalysisPage() {
       const varZ = vVar[base + 2]?.[base + 2] ?? 0;
 
       const covXZ = vVar[base]?.[base + 2] ?? 0;
-
+      
       result.push({
         point: row.point,
 
@@ -204,7 +207,7 @@ export default function AnalysisPage() {
 
     localStorage.setItem("transformParams", JSON.stringify(mapped));
 
-    router.push("/transformasi/input"); 
+    router.push("/transformasi"); 
   };
   
 
@@ -227,12 +230,15 @@ export default function AnalysisPage() {
           "Content-Type": "application/json",
         },
       body: JSON.stringify({
-          name: `Perhitungan ${new Date().toLocaleString()}`,
+          name: projectName || `Perhitungan ${new Date().toLocaleString()}`,
           metode,
           userId: user.id,
-
+          rawData: {
           rawData: raw,
-
+          avgX: data?.pre?.avgX,
+          avgY: data?.pre?.avgY,
+          avgZ: data?.pre?.avgZ,
+          },
           globalTest: {
             result: data?.test?.global?.result,
             aposteriori: data?.test?.global?.aposteriori,
@@ -243,6 +249,7 @@ export default function AnalysisPage() {
 
           snooping: {
             v: data?.adj?.v,
+            vVar: data?.adj?.vVar,
             std: data?.test?.snoop?.sqrtDiag,
             result: data?.test?.snoop?.result,
           },
@@ -258,6 +265,7 @@ export default function AnalysisPage() {
       if (res.ok) {
         alert("Berhasil disimpan");
         setSaved(true);
+        
       } else {
         alert("Gagal");
       }
@@ -270,44 +278,47 @@ export default function AnalysisPage() {
     }
   };
 
-  const renderTable = (matrix: number[][]) => {
-    if (!matrix) return null;
-
- 
-    return (
-      <div className="overflow-auto max-h-[300px] border rounded">
-        <table className="w-full text-sm border-collapse">
-          <tbody>
-            {matrix.map((row, i) => (
-              <tr key={i}>
-                {row.map((val, j) => (
-                  <td
-                    key={j}
-                    className={`border px-2 py-1 text-center ${
-                      val === 0
-                        ? "bg-red-100 text-red-600"
-                        : "bg-green-100 text-green-700"
-                    }`}
-                  >
-                    {val.toFixed ? val.toFixed(3) : val}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    );
-  };
-
   return (
     <div className="p-6 space-y-6">
       {/* MAP */}
-      <div className="rounded-3xl h-[300px] overflow-hidden">
-        {data && (
-        <MapParamAnalysis data={buildMapData()} />
+      <div className="relative rounded-3xl h-[400px] overflow-hidden">
+
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] flex gap-2">
+          <button
+            onClick={() => setViewMode("map")}
+            className={`px-4 py-1 rounded-full text-sm ${
+              viewMode === "map"
+                ? "bg-blue-900 text-white"
+                : "bg-white"
+            }`}
+          >
+            Peta
+          </button>
+
+          <button
+            onClick={() => setViewMode("chart")}
+            className={`px-4 py-1 rounded-full text-sm ${
+              viewMode === "chart"
+                ? "bg-blue-900 text-white"
+                : "bg-white"
+            }`}
+          >
+            Grafik
+          </button>
+        </div>
+
+        {/* CONDITIONAL VIEW */}
+        {data && viewMode === "map" && (
+          <MapParamAnalysis data={buildMapData()} />
         )}
-      </div>
+
+        {data && viewMode === "chart" && (
+          <ResidualChart
+            raw={selectedPoints}
+            v={data?.adj?.v || []}
+          />
+        )}
+    </div>
 
       {/* RESULT LIST */}
       <div className="space-y-4">
@@ -392,26 +403,10 @@ export default function AnalysisPage() {
           <div className="flex justify-between mt-4">
 
             <button
-              onClick={handleSave}
-              disabled={saving || saved}
-              className={`px-6 py-2 rounded-xl text-white transition ${
-                saved
-                ? "bg-green-400 cursor-not-allowed"
-                : saving
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-green-600 hover:bg-green-500"
-              }`}
+              onClick={() => setOpenModal("save")}
+              className="px-6 py-2 rounded-full bg-green-600 text-white hover:bg-green-500"
             >
-              {saved ? (
-                "Tersimpan"
-              ) : saving ? (
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    Menyimpan...
-                  </div>
-              ) : (
-                "Simpan Hasil"
-              )}
+              Simpan
             </button>
 
 
@@ -427,171 +422,260 @@ export default function AnalysisPage() {
       </div>
 
       {/* MODAL */}
-      {openModal && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[9999]">
-          <div className="bg-white rounded-xl p-6 w-[800px] shadow-lg">
-            <h2 className="text-lg font-semibold mb-4">
-              {openModal === "global" && "Detail Uji Global"}
-              {openModal === "snooping" && "Detail Data Snooping"}
-            </h2>
+      <>
+  {/* ================= GLOBAL MODAL ================= */}
+  {openModal === "global" && (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[9999]">
+      <div className="bg-white rounded-xl p-6 w-[400px] shadow-lg">
 
-            {/* ISI MODAL */}
-            <div className="space-y-4 text-sm">
-              {openModal === "global" && (
-  <>
-    <div>
-      Hasil:{" "}
-      <span
-        className={`font-semibold ${
-          data?.test?.global?.result === 1
-            ? "text-green-600"
-            : "text-red-600"
-        }`}
-      >
-        {data?.test?.global?.result === 1
-          ? "Memenuhi"
-          : "Tidak Memenuhi"}
-      </span>
-    </div>
+        <h2 className="text-lg font-semibold mb-4">
+          Detail Uji Global
+        </h2>
 
-    <div>
-      Aposteriori:{" "}
-      <span className="font-medium">
-        {data?.test?.global?.aposteriori?.toFixed(6)}
-      </span>
-    </div>
+        <div className="space-y-3 text-sm">
+          <div>
+            Hasil:{" "}
+            <span
+              className={`font-semibold ${
+                data?.test?.global?.result === 1
+                  ? "text-green-600"
+                  : "text-red-600"
+              }`}
+            >
+              {data?.test?.global?.result === 1
+                ? "Memenuhi"
+                : "Tidak Memenuhi"}
+            </span>
+          </div>
 
-    <div>
-      X hitung:{" "}
-      <span className="font-medium">
-        {data?.test?.global?.Xhitung?.toFixed(6)}
-      </span>
-    </div>
+          <div>
+            Aposteriori:{" "}
+            <span className="font-medium">
+              {data?.test?.global?.aposteriori?.toFixed(6)}
+            </span>
+          </div>
 
-    <div>
-      X tabel (Chi-square):{" "}
-      <span className="font-medium">
-        {data?.test?.global?.Xtabel?.toFixed(6)}
-      </span>
-    </div>
-    <button
-    onClick={closeModal}
-    className="px-4 py-2 bg-blue-900 text-white rounded hover:bg-blue-800"
-  >
-    Tutup
-  </button>
-  </>
-)}
+          <div>
+            X hitung:{" "}
+            <span className="font-medium">
+              {data?.test?.global?.Xhitung?.toFixed(6)}
+            </span>
+          </div>
 
-              {openModal === "snooping" && (
-                <div className="space-y-2">
-                  <div className="flex gap-2 mb-2">
-  <button
-    onClick={() => setSelectedPoints(pointList)}
-    className="px-3 py-1 bg-gray-200 rounded"
-  >
-    Select All
-  </button>
-
-  <button
-    onClick={() => setSelectedPoints([])}
-    className="px-3 py-1 bg-gray-200 rounded"
-  >
-    Clear
-  </button>
-</div>
-  <div className="overflow-auto max-h-[400px]">
-    
-    <table className="w-full text-sm border border-gray-300">
-      <thead className="bg-gray-200">
-        <tr>
-          <th className="border p-2">Use</th>
-          <th className="border p-2">Point</th>
-          <th className="border p-2">Vx</th>
-          <th className="border p-2">Svx</th>
-          <th className="border p-2">Status</th>
-          <th className="border p-2">Vy</th>
-          <th className="border p-2">Svy</th>
-          <th className="border p-2">Status</th>
-          <th className="border p-2">Vz</th>
-          <th className="border p-2">Svz</th>
-          <th className="border p-2">Status</th>
-        </tr>
-      </thead>
-
-      <tbody>
-        {finalRows.map((row: any, i: number) => (
-          <tr
-            key={i}
-            className={`text-center ${
-            !selectedPoints.includes(row.no) ? "opacity-40" : ""
-            }`}>
-            <td className="border p-2">
-              <input
-              type="checkbox"
-              checked={selectedPoints.includes(row.no)}
-              onChange={() => togglePoint(row.no)}
-              />
-            </td>
-            <td className="border p-2">{row.no}</td>
-            <td className="border p-2">{selectedPoints.includes(row.no) ? row.vx?.toFixed(4) : "-"}</td>
-            <td className="border p-2">{selectedPoints.includes(row.no) ? row.svx?.toFixed(4) : "-"}</td>
-            <td className="border p-2">
-              {selectedPoints.includes(row.no)
-                ? row.statusX === 1
-                  ? "✔"
-                  : "✖"
-                : "-"}
-            </td>
-
-            <td className="border p-2">{selectedPoints.includes(row.no) ? row.vy?.toFixed(4) : "-"}</td>
-            <td className="border p-2">{selectedPoints.includes(row.no) ? row.svy?.toFixed(4) : "-"}</td>
-            <td className="border p-2">
-              {selectedPoints.includes(row.no)
-                ? row.statusY === 1
-                  ? "✔"
-                  : "✖"
-                : "-"}
-            </td>
-
-            <td className="border p-2">{selectedPoints.includes(row.no) ? row.vz?.toFixed(4) : "-"}</td>
-            <td className="border p-2">{selectedPoints.includes(row.no) ? row.svz?.toFixed(4) : "-"}</td>
-            <td className="border p-2">
-              {selectedPoints.includes(row.no)
-                ? row.statusZ === 1
-                  ? "✔"
-                  : "✖"
-                : "-"}
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-    
-  </div>
-  <div className="flex justify-between mt-4">
-  <button
-    onClick={handleRecalculate}
-    className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-500"
-  >
-    Recalculate
-  </button>
-
-  <button
-    onClick={closeModal}
-    className="px-4 py-2 bg-blue-900 text-white rounded hover:bg-blue-800"
-  >
-    Tutup
-  </button>
-</div>
-  </div>
-)}
-
-            </div>
-
+          <div>
+            X tabel:{" "}
+            <span className="font-medium">
+              {data?.test?.global?.Xtabel?.toFixed(6)}
+            </span>
           </div>
         </div>
-      )}
+
+        <div className="flex justify-end mt-4">
+          <button
+            onClick={() => setOpenModal(null)}
+            className="px-4 py-2 bg-blue-900 text-white rounded hover:bg-blue-800"
+          >
+            Tutup
+          </button>
+        </div>
+      </div>
+    </div>
+  )}
+
+  {/* ================= SNOOPING MODAL ================= */}
+  {openModal === "snooping" && (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[9999]">
+      <div className="bg-white rounded-xl p-6 w-[1000px] shadow-lg max-h-[80vh] overflow-auto">
+
+        <h2 className="text-lg font-semibold mb-4">
+          Detail Data Snooping
+        </h2>
+
+        <div className="flex gap-2 mb-3">
+          <button
+            onClick={() => setSelectedPoints(pointList)}
+            className="px-3 py-1 bg-gray-200 rounded"
+          >
+            Select All
+          </button>
+
+          <button
+            onClick={() => setSelectedPoints([])}
+            className="px-3 py-1 bg-gray-200 rounded"
+          >
+            Clear
+          </button>
+        </div>
+
+        <table className="w-full text-sm border border-gray-300">
+          <thead className="bg-gray-200">
+            <tr>
+              <th className="border p-2">Use</th>
+              <th className="border p-2">Point</th>
+              <th className="border p-2">Vx</th>
+              <th className="border p-2">Svx</th>
+              <th className="border p-2">Status</th>
+              <th className="border p-2">Vy</th>
+              <th className="border p-2">Svy</th>
+              <th className="border p-2">Status</th>
+              <th className="border p-2">Vz</th>
+              <th className="border p-2">Svz</th>
+              <th className="border p-2">Status</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {finalRows.map((row: any, i: number) => (
+              <tr key={i} className="text-center">
+                <td className="border p-2">
+                  <input
+                    type="checkbox"
+                    checked={selectedPoints.includes(row.no)}
+                    onChange={() => togglePoint(row.no)}
+                  />
+                </td>
+
+                <td className="border p-2">{row.no}</td>
+
+                <td className="border p-2">
+                  {selectedPoints.includes(row.no)
+                    ? row.vx?.toFixed(4)
+                    : "-"}
+                </td>
+
+                <td className="border p-2">
+                  {selectedPoints.includes(row.no)
+                    ? row.svx?.toFixed(4)
+                    : "-"}
+                </td>
+
+                <td className="border p-2">
+                  {selectedPoints.includes(row.no)
+                    ? row.statusX === 1
+                      ? "✔"
+                      : "✖"
+                    : "-"}
+                </td>
+
+                <td className="border p-2">
+                  {selectedPoints.includes(row.no)
+                    ? row.vy?.toFixed(4)
+                    : "-"}
+                </td>
+
+                <td className="border p-2">
+                  {selectedPoints.includes(row.no)
+                    ? row.svy?.toFixed(4)
+                    : "-"}
+                </td>
+
+                <td className="border p-2">
+                  {selectedPoints.includes(row.no)
+                    ? row.statusY === 1
+                      ? "✔"
+                      : "✖"
+                    : "-"}
+                </td>
+
+                <td className="border p-2">
+                  {selectedPoints.includes(row.no)
+                    ? row.vz?.toFixed(4)
+                    : "-"}
+                </td>
+
+                <td className="border p-2">
+                  {selectedPoints.includes(row.no)
+                    ? row.svz?.toFixed(4)
+                    : "-"}
+                </td>
+
+                <td className="border p-2">
+                  {selectedPoints.includes(row.no)
+                    ? row.statusZ === 1
+                      ? "✔"
+                      : "✖"
+                    : "-"}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        <div className="flex justify-between mt-4">
+          <button
+            onClick={handleRecalculate}
+            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-500"
+          >
+            Recalculate
+          </button>
+
+          <button
+            onClick={() => setOpenModal(null)}
+            className="px-4 py-2 bg-blue-900 text-white rounded hover:bg-blue-800"
+          >
+            Tutup
+          </button>
+        </div>
+      </div>
+    </div>
+  )}
+
+  {/* ================= SAVE MODAL ================= */}
+  {openModal === "save" && (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[9999]">
+      <div className="bg-white p-6 rounded-2xl w-96 shadow-xl">
+
+        <h2 className="text-lg font-semibold mb-4">
+          Simpan Project
+        </h2>
+
+        <input
+          type="text"
+          placeholder="Nama project (opsional)"
+          value={projectName}
+          onChange={(e) => setProjectName(e.target.value)}
+          className="w-full p-2 border rounded mb-4"
+          disabled={saving || saved}
+        />
+
+        <div className="flex justify-end gap-2">
+
+          <button
+            onClick={() => setOpenModal(null)}
+            className="px-4 py-2 bg-gray-300 rounded"
+            disabled={saving}
+          >
+            Batal
+          </button>
+
+          <button
+            onClick={handleSave}
+            disabled={saving || saved}
+            className={`px-4 py-2 text-white rounded ${
+              saved
+                ? "bg-green-400"
+                : saving
+                ? "bg-gray-400"
+                : "bg-green-600 hover:bg-green-500"
+            }`}
+          >
+            {saved ? (
+              "✓ Tersimpan"
+            ) : saving ? (
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                Menyimpan...
+              </div>
+            ) : (
+              "Simpan"
+            )}
+          </button>
+
+        </div>
+      </div>
+    </div>
+  )}
+</>
     </div>
   );
 }

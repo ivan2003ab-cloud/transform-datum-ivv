@@ -4,15 +4,15 @@ import {
   MapContainer,
   TileLayer,
   Marker,
-  Polyline,
   useMap,
+  Tooltip
 } from "react-leaflet";
 import { useEffect, useState } from "react";
 
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import "leaflet-ellipse";
 
-// FIX icon broken di Next.js
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 
 L.Icon.Default.mergeOptions({
@@ -23,9 +23,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl:
     "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
-// =======================
-// AUTO FIT
-// =======================
+
 function FitBounds({ data }: { data: any[] }) {
   const map = useMap();
 
@@ -43,59 +41,127 @@ function FitBounds({ data }: { data: any[] }) {
   return null;
 }
 
-// =======================
-// ROTATED ELLIPSE
-// =======================
-function generateRotatedEllipse(
-  lat: number,
-  lon: number,
-  varX: number,
-  varZ: number,
-  covXZ: number,
-  scale: number,
-  steps = 60
-): [number, number][] {
-  const pts: [number, number][] = [];
-
-  const mean = (varX + varZ) / 2;
-  const diff = (varX - varZ) / 2;
-
-  const lambda1 = mean + Math.sqrt(diff * diff + covXZ * covXZ);
-  const lambda2 = mean - Math.sqrt(diff * diff + covXZ * covXZ);
-
-  const a = Math.sqrt(lambda1);
-  const b = Math.sqrt(lambda2);
-
-  const theta = 0.5 * Math.atan2(2 * covXZ, varX - varZ);
-
-  for (let i = 0; i <= steps; i++) {
-    const t = (i / steps) * 2 * Math.PI;
-
-    const x = a * Math.cos(t);
-    const z = b * Math.sin(t);
-
-    const xr = x * Math.cos(theta) - z * Math.sin(theta);
-    const zr = x * Math.sin(theta) + z * Math.cos(theta);
-
-    const dx = xr * scale;
-    const dz = zr * scale;
-
-    const dLat = dz / 111320;
-    const dLon = dx / (111320 * Math.cos((lat * Math.PI) / 180));
-
-    pts.push([lat + dLat, lon + dLon]);
+function createColorScale(data: any[], k = 5) {
+  if (!data || data.length === 0) {
+    return {
+      getColor: () => "#ccc",
+      breaks: [],
+      colors: [],
+    };
   }
 
-  return pts;
+  const values = data.map((d) => d.sy);
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+
+  if (min === max) {
+    const breaks = Array(k + 1).fill(Number(min.toFixed(3)));
+    const colors = ["#2ecc71", "#a3e635", "#facc15", "#fb923c", "#ef4444"];
+
+    return {
+      breaks,
+      colors,
+      getColor: () => colors[0],
+    };
+  }
+
+  const interval = (max - min) / k;
+
+  const breaks: number[] = [];
+  for (let i = 0; i <= k; i++) {
+    breaks.push(Number((min + i * interval).toFixed(3)));
+  }
+
+  const colors = [
+    "#2ecc71",
+    "#a3e635",
+    "#facc15",
+    "#fb923c",
+    "#ef4444",
+  ];
+
+  const getColor = (sy: number) => {
+    for (let i = 0; i < k; i++) {
+      if (sy <= breaks[i + 1]) return colors[i];
+    }
+    return colors[k - 1];
+  };
+
+  return { breaks, colors, getColor };
 }
 
 // =======================
-// COLOR σY
+// ELLIPSE PARAM (covariance → ellipse)
 // =======================
-function getColor(sy: number) {
-  if (sy < 0.02) return "green";
-  if (sy < 0.05) return "orange";
-  return "red";
+function getEllipseParams(
+  varX: number,
+  varY: number,
+  covXY: number,
+  scale: number
+) {
+  const term1 = (varX + varY) / 2;
+  const term2 = Math.sqrt(
+    ((varX - varY) / 2) ** 2 + covXY ** 2
+  );
+
+  const sigmaU2 = term1 + term2;
+  const sigmaV2 = term1 - term2;
+
+  const a = Math.sqrt(Math.max(sigmaU2, 0)) * scale;
+  const b = Math.sqrt(Math.max(sigmaV2, 0)) * scale;
+
+  const theta =
+    0.5 * Math.atan2(2 * covXY, varX - varY);
+console.log({
+  a,b,theta, term1, term2, sigmaU2, sigmaV2
+});
+  return {
+    radiusX: a,
+    radiusY: b,
+    angle: (theta * 180) / Math.PI,
+  };
+}
+
+// =======================
+// ELLIPSE LAYER
+// =======================
+function EllipseLayer({ data, scale, getColor }: any) {
+  const map = useMap();
+
+  useEffect(() => {
+    console.log("ellipse fn:", (L as any).ellipse);
+    if (!data.length) return;
+
+    const layers: L.Layer[] = [];
+
+    data.forEach((p: any) => {
+      const { radiusX, radiusY, angle } = getEllipseParams(
+        p.varX,
+        p.varZ,
+        p.covXZ,
+        scale
+      );
+
+      const ellipseLayer = (L as any).ellipse(
+        [p.lat2, p.lon2],
+        [radiusX, radiusY],
+        angle,
+        {
+          color: getColor(p.sy),
+          weight: 2,
+          fillOpacity: 0.25,
+        }
+      ).addTo(map);
+
+      layers.push(ellipseLayer);
+    });
+
+    return () => {
+      layers.forEach((l) => map.removeLayer(l));
+    };
+  }, [data, scale, map, getColor]);
+
+  return null;
 }
 
 // =======================
@@ -103,7 +169,8 @@ function getColor(sy: number) {
 // =======================
 export default function MapParamAnalysis({ data }: { data: any[] }) {
   const [scale, setScale] = useState(10000);
-    console.log("mapData:", data);
+  const { breaks, colors, getColor } = createColorScale(data);
+
   return (
     <div className="relative h-full w-full">
       <MapContainer
@@ -117,42 +184,43 @@ export default function MapParamAnalysis({ data }: { data: any[] }) {
         />
 
         <FitBounds data={data} />
-        
-        {data.map((p, i) => {
-          const ellipse = generateRotatedEllipse(
-            p.lat2,
-            p.lon2,
-            p.varX,
-            p.varZ,
-            p.covXZ,
-            scale
-          );
 
-          return (
-            <div key={i}>
-              <Marker position={[p.lat2, p.lon2]} />
+        {/* Marker */}
+        {data.map((p, i) => (
+          <Marker key={i} position={[p.lat2, p.lon2]}>
+            <Tooltip permanent direction="top" offset={[0, -10]}>
+              {p.point}
+            </Tooltip>
+          </Marker>
+        ))}
 
-              <Polyline
-                positions={ellipse}
-                pathOptions={{
-                  color: getColor(p.sy),
-                  weight: 2,
-                }}
-              />
-            </div>
-          );
-        })}
+        {/* Ellipse */}
+        <EllipseLayer
+          data={data}
+          scale={scale}
+          getColor={getColor}
+        />
       </MapContainer>
 
-      {/* LEGEND */}
-      <div className="absolute bottom-4 left-4 bg-white p-3 rounded shadow">
-        <div className="font-semibold text-sm">σY</div>
-        <div className="text-xs text-green-600">Kecil</div>
-        <div className="text-xs text-orange-500">Sedang</div>
-        <div className="text-xs text-red-600">Besar</div>
+      {/* ================= LEGEND ================= */}
+      <div className="absolute bottom-4 left-4 bg-white p-3 rounded shadow text-xs">
+        <div className="font-semibold mb-2">σY</div>
+
+        {breaks.length > 0 &&
+          breaks.slice(0, -1).map((b, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <div
+                className="w-3 h-3 rounded"
+                style={{ background: colors[i] }}
+              />
+              <span>
+                {breaks[i]} – {breaks[i + 1]}
+              </span>
+            </div>
+          ))}
       </div>
 
-      {/* SCALE */}
+      {/* ================= SCALE ================= */}
       <div className="absolute top-4 right-4 bg-white p-3 rounded shadow">
         <div className="text-xs mb-1">Scale</div>
         <input

@@ -42,7 +42,7 @@ export default function DashboardLayout({
   return (
     <div className="flex flex-col h-screen w-full bg-white">
       {/* HEADER */}
-      <div className="flex items-center justify-between h-16 bg-blue-900 text-white px-6 border-b border-blue-800 shrink-0">
+      <div className="flex items-center justify-between h-16 bg-gradient-to-r from-blue-900 to-emerald-500 text-white px-6 shrink-0">
         <div className="flex items-center gap-3">
           <Image src="/logo.png" alt="Logo" width={40} height={40} />
           <Link className="font-semibold" href="/">
@@ -71,7 +71,7 @@ export default function DashboardLayout({
               onClick={() => router.push("/login")}
               className="text-sm bg-white text-blue-900 px-3 py-1 rounded"
             >
-            Login
+              Login
             </button>
           )}
         </div>
@@ -84,18 +84,16 @@ export default function DashboardLayout({
           className={`bg-gray-200 border-r border-gray-300 text-gray-800 transition-all duration-300 ease-in-out h-full
           ${sidebarOpen ? "w-64" : "w-16"}`}
         >
-          {/* USER */}
           {sidebarOpen && (
             <div className="px-4 py-4 border-b border-gray-300 font-semibold text-sm">
               {user ? user.name : "Guest"}
             </div>
           )}
 
-          {/* TOGGLE */}
           <div className="flex items-center justify-end p-2">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-1 rounded hover:bg-blue-100 transition"
+              className="p-1 rounded hover:bg-gradient-to-r hover:from-blue-100 hover:to-emerald-100 transition"
             >
               {sidebarOpen ? (
                 <ChevronLeft size={20} />
@@ -105,9 +103,7 @@ export default function DashboardLayout({
             </button>
           </div>
 
-          {/* MENU */}
           <nav className="px-2 space-y-1">
-            {/* HITUNG */}
             <div>
               <MenuItem
                 icon={<Calculator size={18} />}
@@ -126,33 +122,18 @@ export default function DashboardLayout({
               )}
             </div>
 
-            {/* TRANSFORMASI */}
-            <div>
-              <MenuItem
-                icon={<Shuffle size={18} />}
-                label="Transformasi"
-                sidebarOpen={sidebarOpen}
-                isOpen={openMenu === "transformasi"}
-                onClick={() => toggleMenu("transformasi")}
-                hasSub
-              />
-
-              {sidebarOpen && openMenu === "transformasi" && (
-                <div className="ml-6 text-sm space-y-1">
-                  <SubItem label="Input" href="/transformasi/input" />
-                  <SubItem label="Result" href="/transformasi/result" />
-                </div>
-              )}
-            </div>
-
-            {/* MENU LAIN */}
+            <NavItem
+              icon={<Shuffle size={18} />}
+              label="Transformasi Datum"
+              href="/transformasi"
+              sidebarOpen={sidebarOpen}
+            />
             <NavItem
               icon={<List size={18} />}
               label="Parameter Saya"
               href="/parameter_saya"
               sidebarOpen={sidebarOpen}
             />
-
             <NavItem
               icon={<User size={18} />}
               label="Account"
@@ -190,7 +171,7 @@ function MenuItem({
   return (
     <div
       onClick={onClick}
-      className="flex items-center justify-between px-3 py-2 rounded-lg transition cursor-pointer hover:bg-blue-50"
+      className="flex items-center justify-between px-3 py-2 rounded-lg transition cursor-pointer hover:bg-gradient-to-r hover:from-blue-400 hover:to-blue-200"
     >
       <div className="flex items-center gap-3">
         <div className="text-gray-900">{icon}</div>
@@ -224,8 +205,8 @@ function SubItem({
       <div
         className={`px-3 py-2 rounded-lg cursor-pointer transition ${
           isActive
-            ? "bg-blue-100 text-blue-700 border-l-4 border-blue-600"
-            : "text-gray-900 hover:bg-blue-50"
+            ? "bg-gradient-to-r from-blue-700 to-blue-300 text-white border-l-4 border-emerald-500"
+            : "text-gray-900 hover:bg-gradient-to-r hover:from-blue-400 hover:to-blue-200"
         }`}
       >
         {label}
@@ -254,11 +235,11 @@ function NavItem({
       <div
         className={`flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition ${
           isActive
-            ? "bg-blue-100 text-blue-700 border-l-4 border-blue-600"
-            : "text-gray-900 hover:bg-blue-50"
+            ? "bg-gradient-to-r from-blue-700 to-blue-300 text-white border-l-4 border-emerald-500"
+            : "text-gray-900 hover:bg-gradient-to-r hover:from-blue-400 hover:to-blue-200"
         }`}
       >
-        <div className={isActive ? "text-blue-600" : "text-gray-900"}>
+        <div className={isActive ? "text-white" : "text-gray-900"}>
           {icon}
         </div>
 

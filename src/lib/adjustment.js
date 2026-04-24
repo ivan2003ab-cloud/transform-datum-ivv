@@ -44,7 +44,6 @@ export function hitungResidu(A, F, params, P) {
 }
 
 export function varkov(aposteriori, Q, P, A) {
-  // 🔥 FIX: convert ke matrix
   const Qm = math.matrix(Q);
   const Pm = math.matrix(P);
   const Am = math.matrix(A);
