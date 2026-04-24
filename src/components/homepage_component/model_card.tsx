@@ -14,7 +14,7 @@ export default function ModelCards() {
       desc: "Menghitung parameter transformasi datum berdasarkan data koordinat sekutu.",
       icon: <Calculator size={22} />,
       color: "bg-blue-500 text-white",
-      link: "/hitung-parameter/input",
+      link: "/hitung_parameter/input",
     },
     {
       title: "Transformasi Datum",
