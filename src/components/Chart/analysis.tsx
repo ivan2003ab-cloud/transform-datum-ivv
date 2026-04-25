@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   BarChart,
   Bar,
@@ -9,22 +10,62 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-function ResidualChart({ raw, v }: any) {
-  const data = raw.map((p: any, i: number) => {
-    const base = i * 3;
-    return {
-      name: p,
-      dx: v[base]?.[0] ?? 0,
-      dy: v[base + 1]?.[0] ?? 0,
-      dz: v[base + 2]?.[0] ?? 0,
-    };
-  });
+function ResidualChart({ raw, v, rmse }: any) {
+  const [mode, setMode] = useState<"sekutu" | "uji">("sekutu");
+
+  const buildSekutu = () => {
+  let calcIndex = 0;
+
+  return raw
+    .filter(
+      (p: any) =>
+        p.status?.toLowerCase() === "sekutu" &&
+        p.selected === "selected"
+    )
+    .map((p: any) => {
+      const base = calcIndex * 3;
+      calcIndex++;
+
+      return {
+        name: p.point,
+        dx: v[base]?.[0] ?? 0,
+        dy: v[base + 1]?.[0] ?? 0,
+        dz: v[base + 2]?.[0] ?? 0,
+      };
+    });
+};
+
+  const buildUji = () => {
+    if (!rmse?.hasil) return [];
+
+    return rmse.hasil.map((p: any) => ({
+      name: p.point,
+      dx: p.dx,
+      dy: p.dy,
+      dz: p.dz,
+    }));
+  };
+
+  const data = mode === "sekutu" ? buildSekutu() : buildUji();
 
   return (
-    <div className="h-full w-full bg-white pt-20 p-2">
-      <h2 className="text-center text-sm font-semibold mb-2">
-        Residu (m)
-      </h2>
+    <div className="h-full w-full bg-white mt-12 p-2">
+      {/* TOGGLE */}
+      <div className="flex justify-center mb-3">
+  <div className="flex items-center gap-2 text-sm font-semibold">
+    <span>Residu Titik</span>
+
+    <select
+      value={mode}
+      onChange={(e) => setMode(e.target.value as "sekutu" | "uji")}
+      className="px-3 py-1 rounded-full bg-gray-100 border text-sm font-medium focus:outline-none"
+    >
+      <option value="sekutu">Sekutu</option>
+      <option value="uji">Uji</option>
+    </select>
+    <span>(m)</span>
+  </div>
+</div>
 
       <ResponsiveContainer width="100%" height={250}>
         <BarChart data={data}>

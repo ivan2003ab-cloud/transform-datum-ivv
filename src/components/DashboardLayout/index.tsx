@@ -171,7 +171,7 @@ function MenuItem({
   return (
     <div
       onClick={onClick}
-      className="flex items-center justify-between px-3 py-2 rounded-lg transition cursor-pointer hover:bg-gradient-to-r hover:from-blue-400 hover:to-blue-200"
+      className="flex items-center justify-between px-3 py-2 rounded-lg transition cursor-pointer hover:bg-gradient-to-r hover:from-blue-400 hover:to-emerald-200"
     >
       <div className="flex items-center gap-3">
         <div className="text-gray-900">{icon}</div>
@@ -205,8 +205,8 @@ function SubItem({
       <div
         className={`px-3 py-2 rounded-lg cursor-pointer transition ${
           isActive
-            ? "bg-gradient-to-r from-blue-700 to-blue-300 text-white border-l-4 border-emerald-500"
-            : "text-gray-900 hover:bg-gradient-to-r hover:from-blue-400 hover:to-blue-200"
+            ? "bg-gradient-to-r from-blue-700 to-emerald-300 text-white border-l-4 border-emerald-500"
+            : "text-gray-900 hover:bg-gradient-to-r hover:from-blue-400 hover:to-emerald-200"
         }`}
       >
         {label}
@@ -235,8 +235,8 @@ function NavItem({
       <div
         className={`flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition ${
           isActive
-            ? "bg-gradient-to-r from-blue-700 to-blue-300 text-white border-l-4 border-emerald-500"
-            : "text-gray-900 hover:bg-gradient-to-r hover:from-blue-400 hover:to-blue-200"
+            ? "bg-gradient-to-r from-blue-700 to-emerald-300 text-white border-l-4 border-emerald-500"
+            : "text-gray-900 hover:bg-gradient-to-r hover:from-blue-400 hover:to-emerald-200"
         }`}
       >
         <div className={isActive ? "text-white" : "text-gray-900"}>

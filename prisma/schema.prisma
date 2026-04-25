@@ -31,4 +31,5 @@ model Project {
   globalTest Json
   snooping   Json
   parameter  Json
+  rmse       Json
 }

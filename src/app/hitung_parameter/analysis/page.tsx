@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import dynamic from "next/dynamic";
 import { runAdjustment } from "@/lib/runAdjustment";
 import { ecefToGeodetic } from "@/lib/coordinateConverter";
@@ -11,8 +11,6 @@ const MapParamAnalysis = dynamic(
   () => import("@/components/Map/mapParamAnalysis"),
   { ssr: false }
 );
-
-
 
 export default function AnalysisPage() {
   const router = useRouter();
@@ -25,23 +23,36 @@ export default function AnalysisPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [projectName, setProjectName] = useState("");
+  const [editData, setEditData] = useState<any[]>([]);
 
   useEffect(() => {
-    const stored = localStorage.getItem("hasil");
-    if (stored) setData(JSON.parse(stored));
+  const stored = localStorage.getItem("hasil");
+  const raw = localStorage.getItem("rawInput");
 
-    const metode = localStorage.getItem("metode");
-    if (metode) setMetode(metode);
+  if (!stored || !raw) return;
 
-    const pointList = localStorage.getItem("points");
-    if (pointList) {
-      const parsed = JSON.parse(pointList);
+  const parsed = JSON.parse(stored);
+  const rawData = JSON.parse(raw);
+  parsed.pre.allData = rawData;
 
-      setPointList(parsed);
+  setData(parsed);
 
-      setSelectedPoints(parsed);
-    }
-  }, []);
+  const sekutuAll = rawData.filter(
+    (d: any) => d.status?.toLowerCase().trim() === "sekutu"
+  );
+
+  const allNames = sekutuAll.map((d: any) => d.point);
+
+  const selected = sekutuAll
+    .filter((d: any) => d.selected === "selected")
+    .map((d: any) => d.point);
+
+  setPointList(allNames);
+  setSelectedPoints(selected.length ? selected : allNames);
+
+  const metodeLS = localStorage.getItem("metode");
+  if (metodeLS) setMetode(metodeLS);
+}, []);
 
   const togglePoint = (name: string) => {
     setSelectedPoints((prev) =>
@@ -51,57 +62,62 @@ export default function AnalysisPage() {
     );
   };
 
-  const closeModal = () => setOpenModal(null);
-  const formatSnooping = () => {
-    const name = selectedPoints;
-    const v = data?.adj?.v || [];
-    const std = data?.test?.snoop?.sqrtDiag || [];
-    const res = data?.test?.snoop?.result || [];
-
-    const rows = [];
-
-    for (let i = 0; i < name.length; i++) {
-      rows.push({
-        no: name[i],
-
-        vx: v[i * 3]?.[0],
-        vy: v[i * 3 + 1]?.[0],
-        vz: v[i * 3 + 2]?.[0],
-
-        svx: std[i * 3],
-        svy: std[i * 3 + 1],
-        svz: std[i * 3 + 2],
-
-        statusX: res[i * 3],
-        statusY: res[i * 3 + 1],
-        statusZ: res[i * 3 + 2],
-      });
-    }
-
-    return rows;
+  const openEditStatus = () => {
+    const raw = JSON.parse(localStorage.getItem("rawInput") || "[]");
+    setEditData(raw);
+    setOpenModal("editStatus");
   };
-  const snoopData = formatSnooping();
+  const snoopRows = useMemo(() => {
+  if (!data || !data.adj || !data.test) return [];
 
-
-  const unselected = pointList.filter(
-    (p) => !selectedPoints.includes(p)
+  const sekutu = (data.pre.allData || []).filter(
+    (d: any) => d.status?.toLowerCase().trim() === "sekutu"
   );
 
+  const v = data.adj.v || [];
+  const std = data.test.snoop.sqrtDiag || [];
+  const res = data.test.snoop.result || [];
 
-  const unselectedRows = unselected.map((p) => ({
-    no: p,
-    vx: null,
-    vy: null,
-    vz: null,
-    svx: null,
-    svy: null,
-    svz: null,
-    statusX: null,
-    statusY: null,
-    statusZ: null,
-  }));
+  let calcIndex = 0;
 
-  const finalRows = [...snoopData, ...unselectedRows];
+  return sekutu.map((row: any) => {
+    const active = row.selected === "selected";
+
+    if (active) {
+      const base = calcIndex * 3;
+      calcIndex++;
+
+      return {
+        no: row.point,
+        selected: row.selected,
+        vx: v[base]?.[0] ?? v[base] ?? null,
+        vy: v[base + 1]?.[0] ?? v[base + 1] ?? null,
+        vz: v[base + 2]?.[0] ?? v[base + 2] ?? null,
+        svx: std[base],
+        svy: std[base + 1],
+        svz: std[base + 2],
+        statusX: res[base],
+        statusY: res[base + 1],
+        statusZ: res[base + 2],
+      };
+    }
+
+    return {
+      no: row.point,
+      selected: row.selected,
+      vx: null,
+      vy: null,
+      vz: null,
+      svx: null,
+      svy: null,
+      svz: null,
+      statusX: null,
+      statusY: null,
+      statusZ: null,
+      disabled: true,
+    };
+  });
+}, [data]);
   const formatParameter = () => {
     const params = data?.adj?.params || [];
     const xVar = data?.adj?.xVar || [];
@@ -132,42 +148,33 @@ export default function AnalysisPage() {
       };
     });
   };
-  const handleRecalculate = async () => {
-    try {
-      const raw = localStorage.getItem("rawInput");
-      if (!raw) return alert("Data awal tidak ada 😭");
+  const handleRecalculate = async (rawData: any) => {
+    localStorage.setItem("rawInput", JSON.stringify(rawData));
 
-    const parsed = JSON.parse(raw);
+  const result = await runAdjustment(rawData, metode!);
 
-    const filtered = parsed.filter((item: any) =>
-      selectedPoints.includes(item.point)
-    );
+  result.pre.allData = rawData;
 
-    
-    const result = await runAdjustment(filtered, metode!);
-
-    setData(result);
-    console.log("selectedPoints:", selectedPoints);
-    console.log("filtered:", filtered);
-    localStorage.setItem("hasil", JSON.stringify(result));
-
-    alert("Recalculate berhasil");
-  } catch (err) {
-    console.error(err);
-    alert("Gagal");
-  }
-  };
+  setData(result);
+  localStorage.setItem("hasil", JSON.stringify(result));
+};
   const buildMapData = () => {
     if (!data) return [];
 
-    const raw = JSON.parse(localStorage.getItem("rawInput") || "[]");
-    const vVar = data?.adj?.vVar || [];
+  const raw = JSON.parse(localStorage.getItem("rawInput") || "[]");
+  const vVar = data?.adj?.vVar || [];
 
-    const result = [];
+  const sekutuSelected = raw.filter(
+    (row:any) =>
+      row.status?.toLowerCase().trim() === "sekutu" &&
+      row.selected === "selected"
+  );
 
-    for (let i = 0; i < raw.length; i++) {
-      const base = i * 3;
-      const row = raw[i];
+  const result = [];
+
+  for (let i = 0; i < sekutuSelected.length; i++) {
+    const base = i * 3;
+    const row = sekutuSelected[i];
 
     
       const geo = ecefToGeodetic(row.x2, row.y2, row.z2);
@@ -244,7 +251,6 @@ export default function AnalysisPage() {
             aposteriori: data?.test?.global?.aposteriori,
             Xhitung: data?.test?.global?.Xhitung,
             Xtabel: data?.test?.global?.Xtabel,
-
           },
 
           snooping: {
@@ -258,6 +264,13 @@ export default function AnalysisPage() {
             params: data?.adj?.params,
             xVar: data?.adj?.xVar,
             signif: data?.test?.signif?.result,
+          },
+
+          rmse: {hasil: data?.test?.rmse?.hasil,
+                  rmseX: data?.test?.rmse?.rmseX,
+                  rmseY: data?.test?.rmse?.rmseY,
+                  rmseZ: data?.test?.rmse?.rmseZ,
+                  rmse3D: data?.test?.rmse?.rmse3D,
           },
         }),
       });
@@ -277,7 +290,23 @@ export default function AnalysisPage() {
         setSaving(false);
     }
   };
+const rawString = localStorage.getItem("rawInput");
+const raw = rawString ? JSON.parse(rawString) : [];
 
+const count = raw.reduce(
+  (acc: { sekutu: number; uji: number }, item: any) => {
+    const status = item.status?.toLowerCase().trim();
+
+    if (status === "sekutu") acc.sekutu++;
+    else if (status === "uji") acc.uji++;
+
+    return acc;
+  },
+  { sekutu: 0, uji: 0 }
+);
+
+const jumlahSekutu = count.sekutu;
+const jumlahUji = count.uji;
   return (
     <div className="p-6 space-y-6">
       {/* MAP */}
@@ -314,12 +343,29 @@ export default function AnalysisPage() {
 
         {data && viewMode === "chart" && (
           <ResidualChart
-            raw={selectedPoints}
-            v={data?.adj?.v || []}
+            raw={JSON.parse(localStorage.getItem("rawInput") || "[]")}
+  v={data?.adj?.v || []}
+  rmse={data?.test?.rmse}
           />
         )}
     </div>
+    <div className="flex items-center justify-between mb-6">
+  <div className="flex gap-4">
+    <div className="px-5 py-2 bg-blue-300 rounded-full text-sm font-medium">
+      Jumlah Titik Sekutu: {jumlahSekutu}
+    </div>
+    <div className="px-5 py-2 bg-blue-300 rounded-full text-sm font-medium">
+      Jumlah Titik Uji: {jumlahUji}
+    </div>
+  </div>
 
+  <button
+    onClick={openEditStatus}
+    className="px-6 py-2 bg-emerald-700 text-white rounded-full text-sm font-semibold hover:bg-emerald-600 transition"
+  >
+    Edit Status Titik
+  </button>
+</div>
       {/* RESULT LIST */}
       <div className="space-y-4">
         {/* Uji Global */}
@@ -352,6 +398,18 @@ export default function AnalysisPage() {
           <button
             onClick={() => setOpenModal("snooping")}
             className="px-6 py-2 rounded-full bg-blue-900 text-white hover:bg-blue-800"
+          >
+            Detail
+          </button>
+        </div>
+
+        {/* RMSE Titik Uji */}
+        <div className="flex items-center justify-between">
+          <span className="font-semibold">RMSE Titik Uji</span>
+
+          <button
+            onClick={() => setOpenModal("rmse")}
+            className="px-6 py-2 rounded-full bg-blue-900 text-white"
           >
             Detail
           </button>
@@ -423,6 +481,93 @@ export default function AnalysisPage() {
 
       {/* MODAL */}
       <>
+
+  {openModal === "editStatus" && (
+  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[9999]">
+    <div className="bg-white rounded-xl p-6 w-[900px] max-h-[80vh] overflow-auto">
+
+      <h2 className="text-lg font-semibold mb-4">
+        Edit Status Titik
+      </h2>
+
+      <table className="w-full text-sm border">
+  <thead className="bg-gray-200">
+    <tr>
+      <th className="border p-2">Point</th>
+      <th className="border p-2">X1</th>
+      <th className="border p-2">Y1</th>
+      <th className="border p-2">Z1</th>
+      <th className="border p-2">X2</th>
+      <th className="border p-2">Y2</th>
+      <th className="border p-2">Z2</th>
+      <th className="border p-2">Status</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    {editData.map((row, i) => (
+      <tr key={i} className="text-center">
+        <td className="border p-2">{row.point}</td>
+
+        <td className="border p-2">{row.x1?.toFixed(3)}</td>
+        <td className="border p-2">{row.y1?.toFixed(3)}</td>
+        <td className="border p-2">{row.z1?.toFixed(3)}</td>
+
+        <td className="border p-2">{row.x2?.toFixed(3)}</td>
+        <td className="border p-2">{row.y2?.toFixed(3)}</td>
+        <td className="border p-2">{row.z2?.toFixed(3)}</td>
+
+        <td className="border p-2">
+          <select
+            value={row.status}
+            onChange={(e) => {
+              const updated = [...editData];
+              updated[i].status = e.target.value;
+              setEditData(updated);
+            }}
+            className="border p-1 rounded"
+          >
+            <option value="sekutu">sekutu</option>
+            <option value="uji">uji</option>
+          </select>
+        </td>
+      </tr>
+    ))}
+  </tbody>
+</table>
+
+      <div className="flex justify-between mt-4">
+        <button
+          onClick={async () => {
+  const updated = editData.map((item) => {
+    if (item.status !== "sekutu") {
+      const { selected, ...rest } = item;
+      return rest;
+    }
+    return item;
+  });
+
+  await handleRecalculate(updated);
+
+  alert("Recalculate berhasil");
+  setOpenModal(null);
+}}
+          className="px-4 py-2 bg-emerald-800 text-white rounded"
+        >
+          Recalculate
+        </button>
+
+        <button
+          onClick={() => setOpenModal(null)}
+          className="px-4 py-2 bg-gray-300 rounded"
+        >
+          Batal
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
   {/* ================= GLOBAL MODAL ================= */}
   {openModal === "global" && (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[9999]">
@@ -525,7 +670,7 @@ export default function AnalysisPage() {
           </thead>
 
           <tbody>
-            {finalRows.map((row: any, i: number) => (
+            {snoopRows.map((row: any, i: number) => (
               <tr key={i} className="text-center">
                 <td className="border p-2">
                   <input
@@ -603,7 +748,29 @@ export default function AnalysisPage() {
 
         <div className="flex justify-between mt-4">
           <button
-            onClick={handleRecalculate}
+            onClick={async () => {
+    try {
+      const raw = JSON.parse(localStorage.getItem("rawInput") || "[]");
+
+      const updated = raw.map((item: any) => {
+        if (item.status !== "sekutu") return item;
+
+        if (selectedPoints.includes(item.point)) {
+          return { ...item, selected: "selected" };
+        } else {
+          const { selected, ...rest } = item;
+          return rest;
+        }
+      });
+
+      await handleRecalculate(updated);
+
+      alert("Recalculate berhasil");
+    } catch (err) {
+      console.error(err);
+      alert("Gagal");
+    }
+  }}
             className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-500"
           >
             Recalculate
@@ -619,7 +786,40 @@ export default function AnalysisPage() {
       </div>
     </div>
   )}
+  {openModal === "rmse" && (
+  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[9999]">
+    <div className="bg-white rounded-xl p-6 w-[700px] shadow-lg">
 
+      <h2 className="text-lg font-semibold mb-4">
+        Hasil Pengujian Titik Uji
+      </h2>
+
+      {data?.test?.rmse?.rmse3D === null ? (
+        <div className="text-center text-gray-500">
+          Anda tidak mendefinisikan titik uji
+        </div>
+      ) : (
+        <div className="space-y-2 text-sm">
+          <div>RMSE X: {data?.test?.rmse?.rmseX.toFixed(6)}</div>
+          <div>RMSE Y: {data?.test?.rmse?.rmseY.toFixed(6)}</div>
+          <div>RMSE Z: {data?.test?.rmse?.rmseZ.toFixed(6)}</div>
+          <div className="font-semibold">
+            RMSE 3D: {data?.test?.rmse?.rmse3D.toFixed(6)}
+          </div>
+        </div>
+      )}
+
+      <div className="flex justify-end mt-4">
+        <button
+          onClick={() => setOpenModal(null)}
+          className="px-4 py-2 bg-blue-900 text-white rounded"
+        >
+          Tutup
+        </button>
+      </div>
+    </div>
+  </div>
+)}
   {/* ================= SAVE MODAL ================= */}
   {openModal === "save" && (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[9999]">

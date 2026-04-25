@@ -13,6 +13,7 @@ export async function POST(req: Request) {
     globalTest,
     snooping,
     parameter,
+    rmse,
   } = body;
 
   const project = await prisma.project.create({
@@ -24,6 +25,7 @@ export async function POST(req: Request) {
       globalTest,
       snooping,
       parameter,
+      rmse,
     },
   });
 

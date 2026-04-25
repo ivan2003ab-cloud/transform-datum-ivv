@@ -39,7 +39,9 @@ export default function InputPage() {
 
     if (struktur === "cartesian") {
       formatted = json.map((row: any) => ({
-        point: row.Point,
+        point: row.Titik,
+        status: row.Status?.toLowerCase(),
+        selected: "selected",
         x1: row.X1,
         y1: row.Y1,
         z1: row.Z1,
@@ -52,7 +54,9 @@ export default function InputPage() {
       }));
     } else {
       const geo = json.map((row: any) => ({
-        point: row.Point,
+        point: row.Titik,
+        status: row.Status?.toLowerCase(),
+        selected: "selected",
         lat1: row.Lat1,
         lon1: row.Lon1,
         h1: row.H1,
@@ -72,45 +76,20 @@ export default function InputPage() {
     localStorage.setItem("points", JSON.stringify(pointList));
   };
 
-  const downloadTemplate = (type: string) => {
-    let data: any[] = [];
+  const downloadTemplate = (type:string) => {
+    let filePath = "";
 
     if (type === "cartesian") {
-      data = [
-        {
-          Point: 1,
-          X1: 0,
-          Y1: 0,
-          Z1: 0,
-          X2: 0,
-          Y2: 0,
-          Z2: 0,
-          SX2: "",
-          SY2: "",
-          SZ2: "",
-        },
-      ];
+      filePath = "/template-hitungparams-kartesi.xlsx";
     } else {
-      data = [
-        {
-          Point: 1,
-          Lat1: 0,
-          Lon1: 0,
-          H1: 0,
-          Lat2: 0,
-          Lon2: 0,
-          H2: 0,
-          SX2: "",
-          SY2: "",
-          SZ2: "",
-        },
-      ];
+      filePath = "/template-hitungparams-geodetik.xlsx";
     }
 
-    const worksheet = XLSX.utils.json_to_sheet(data);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Template");
-    XLSX.writeFile(workbook, `template_${type}.xlsx`);
+    const link = document.createElement("a");
+    link.href = filePath;
+    const fileName = filePath.split("/").pop();
+    link.download = fileName || "template.xlsx";
+    link.click();
 
     setShowTemplatePopup(false);
   };

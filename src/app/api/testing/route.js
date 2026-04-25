@@ -1,26 +1,21 @@
-import { globalTest, dataSnoop, signifikansi } from "@/lib/testing";
+import { globalTest, dataSnoop, signifikansi, hitungRMSETitikUji} from "@/lib/testing";
 
 export async function POST(req) {
   try {
     const body = await req.json();
 
-    console.log("BODY TEST:", body); 
-
-    const { v, vVar, params, xVar, n, aposteriori } = body;
-
-    if (!vVar) {
-      throw new Error("vVar undefined");
-    }
+    const { v, vVar, params, xVar, n, aposteriori, titikUji, metode, avgX, avgY, avgZ } = body;
 
     const global = globalTest(aposteriori, n);
     const snoop = dataSnoop(v, vVar, n);
     const signif = signifikansi(params, xVar, n);
-    console.log("BODY TEST:", snoop)
+    const rmse = hitungRMSETitikUji(titikUji, params, metode, avgX, avgY, avgZ);
 
     return Response.json({
       global,
       snoop,
       signif,
+      rmse,
     });
   } catch (err) {
     console.error("ERROR TEST:", err);

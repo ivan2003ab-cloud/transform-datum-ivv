@@ -29,7 +29,10 @@ export default function BandingkanPage() {
 
   return { ok, no };
 };
-
+  const metodeLabel: Record<string, string> = {
+  bursa: "Bursa Wolf",
+  molodensky: "Molodensky Badekas",
+  }
   const snoop1 = getSnoop(p1);
   const snoop2 = getSnoop(p2);
 
@@ -85,13 +88,30 @@ export default function BandingkanPage() {
           </thead>
 
           <tbody className="text-center">
-
+  {/* MODEL */}
+  <tr>
+    <td>Model Transformasi</td>
+    <td colSpan={3}>{metodeLabel[p1.metode] || p1.metode}</td>
+    <td colSpan={3}>{metodeLabel[p2.metode] || p2.metode}</td>
+  </tr>
   {/* JUMLAH TITIK */}
   <tr>
-    <td>Jumlah Titik</td>
-    <td colSpan={3}>{p1.rawData?.rawData?.length || 0}</td>
-    <td colSpan={3}>{p2.rawData?.rawData?.length || 0}</td>
-  </tr>
+  <td>Jumlah Titik Sekutu</td>
+  <td colSpan={3}>
+    {
+      (p1.rawData?.rawData || []).filter(
+        (d: any) => d.status?.toLowerCase().trim() === "sekutu" && d.selected === "selected"
+      ).length
+    }
+  </td>
+  <td colSpan={3}>
+    {
+      (p2.rawData?.rawData || []).filter(
+        (d: any) => d.status?.toLowerCase().trim() === "sekutu" && d.selected === "selected"
+      ).length
+    }
+  </td>
+</tr>
 
   {/* VARIAN */}
   <tr>

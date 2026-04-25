@@ -20,7 +20,6 @@ export default function ParameterSayaPage() {
     setOpenId(openId === id ? null : id);
   };
 
-  // 🔥 CHECKBOX SELECT
   const handleSelect = (id: string) => {
     setSelectedIds((prev) =>
       prev.includes(id)
@@ -29,7 +28,6 @@ export default function ParameterSayaPage() {
     );
   };
 
-  // 🔥 DELETE MULTI
   const handleDelete = async () => {
     if (selectedIds.length === 0) {
       alert("Pilih data dulu");
@@ -81,12 +79,14 @@ export default function ParameterSayaPage() {
           signif: {
             result: project.parameter.signif,
           },
+          rmse: project.rmse,
         },
         pre: {rawData: project.rawData.rawData,
           avgX: project.rawData.avgX,
           avgY: project.rawData.avgY,
           avgZ: project.rawData.avgZ,
         },
+        metode: project.metode,
       })
     );
 
@@ -117,7 +117,7 @@ export default function ParameterSayaPage() {
         </h1>
 
         <div className="flex gap-3">
-          {/* 🔥 BANDINGKAN */}
+          {/* BANDINGKAN */}
             <button
               onClick={() => handleCompare()}
               disabled={selectedIds.length !== 2}
@@ -129,7 +129,7 @@ export default function ParameterSayaPage() {
             >
               Bandingkan ({selectedIds.length}/2)
             </button>
-        {/* 🔥 DELETE BUTTON */}
+        {/* DELETE BUTTON */}
         <button
           onClick={handleDelete}
           className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"

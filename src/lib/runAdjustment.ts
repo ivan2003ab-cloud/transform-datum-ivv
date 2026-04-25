@@ -36,6 +36,11 @@ export async function runAdjustment(data: any[], metode: string) {
       xVar: adjData.xVar,
       aposteriori: adjData.aposteriori,
       n: preData.F.length,
+      titikUji: preData.titikUji,
+      avgX: preData.avgX,
+      avgY: preData.avgY,
+      avgZ: preData.avgZ,
+      metode,
     }),
   });
   const testData = await test.json();

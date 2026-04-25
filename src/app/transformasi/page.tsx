@@ -95,33 +95,9 @@ export default function TransformPage() {
       const { x1, y1, z1 } = p;
 
       const r11 = Math.cos(rx) * Math.cos(ry);
-      const r12 = Math.sin(rx) * Math.sin(ry) * Math.cos(rz) + Math.cos(rx) * Math.sin(rz);
-      const r13 = -Math.cos(rx) * Math.sin(ry) * Math.cos(rz) + Math.sin(rx) * Math.sin(rz);
-
-      const r21 = -Math.cos(ry) * Math.sin(rz);
       const r22 = -Math.sin(rx) * Math.sin(ry) * Math.sin(rz) + Math.cos(rx) * Math.cos(rz);
-      const r23 = Math.cos(rx) * Math.sin(ry) * Math.sin(rz) + Math.sin(rx) * Math.cos(rz);
-
-      const r31 = Math.sin(ry);
-      const r32 = -Math.sin(rx) * Math.cos(ry);
       const r33 = Math.cos(rx) * Math.cos(ry);
-        console.log("==== PARAM ====");
-console.log("tx,ty,tz:", tx, ty, tz);
-console.log("rx,ry,rz:", rx, ry, rz);
-console.log("s:", s);
 
-console.log("==== ROTATION MATRIX ====");
-console.log("r11:", r11);
-console.log("r12:", r12);
-console.log("r13:", r13);
-
-console.log("r21:", r21);
-console.log("r22:", r22);
-console.log("r23:", r23);
-
-console.log("r31:", r31);
-console.log("r32:", r32);
-console.log("r33:", r33);
       const x2 = s * (r11 * x1) + tx;
       const y2 = s * (r22 * y1) + ty;
       const z2 = s * (r33 * z1) + tz;

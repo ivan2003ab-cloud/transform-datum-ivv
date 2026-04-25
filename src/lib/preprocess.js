@@ -7,11 +7,21 @@ export function bwMatrix(data, metode) {
   let F = [];
   let P = [];
 
-  const avgX = math.mean(data.map(row => row.x1));
-  const avgY = math.mean(data.map(row => row.y1));
-  const avgZ = math.mean(data.map(row => row.z1));
+  // === 1. PISAH DATA ===
+  const dataSekutu = data.filter(
+    row => row.status?.toLowerCase().trim() === "sekutu" && row.selected === "selected"
+  );
+  const dataUji = data.filter(
+    row => row.status?.toLowerCase().trim() === "uji"
+  );
 
-  data.forEach((row) => {
+  // === 2. HITUNG RATA2 (HANYA SEKUTU) ===
+  const avgX = math.mean(dataSekutu.map(row => row.x1));
+  const avgY = math.mean(dataSekutu.map(row => row.y1));
+  const avgZ = math.mean(dataSekutu.map(row => row.z1));
+
+  // === 3. BANGUN MATRIKS ===
+  dataSekutu.forEach((row) => {
     const { x1, y1, z1, x2, y2, z2 } = row;
     let X = x1, Y = y1, Z = z1;
 
@@ -20,6 +30,7 @@ export function bwMatrix(data, metode) {
       Y = y1 - avgY;
       Z = z1 - avgZ;
     }
+
     A.push([1, 0, 0, 0, -Z, Y, X]);
     A.push([0, 1, 0, Z, 0, -X, Y]);
     A.push([0, 0, 1, -Y, X, 0, Z]);
@@ -40,14 +51,17 @@ export function bwMatrix(data, metode) {
 
   const P_m = P.length
     ? math.diag(P)
-    : math.identity(data.length * 3);
+    : math.identity(dataSekutu.length * 3);
 
+    console.log("SEKUTU FINAL:", dataSekutu);
   return {
-  A: A_m.toArray(),
-  F: F_m.toArray(),
-  P: P_m.toArray(),
-  avgX,
-  avgY,
-  avgZ,
-};
+    A: A_m.toArray(),
+    F: F_m.toArray(),
+    P: P_m.toArray(),
+    avgX,
+    avgY,
+    avgZ,
+    titikUji: dataUji,
+    titikSekutu: dataSekutu,
+  };
 }
