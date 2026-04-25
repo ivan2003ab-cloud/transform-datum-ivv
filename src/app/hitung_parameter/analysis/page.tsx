@@ -24,6 +24,8 @@ export default function AnalysisPage() {
   const [saved, setSaved] = useState(false);
   const [projectName, setProjectName] = useState("");
   const [editData, setEditData] = useState<any[]>([]);
+  const [jumlahSekutu, setJumlahSekutu] = useState(0);
+  const [jumlahUji, setJumlahUji] = useState(0);
 
   useEffect(() => {
   const stored = localStorage.getItem("hasil");
@@ -33,6 +35,7 @@ export default function AnalysisPage() {
 
   const parsed = JSON.parse(stored);
   const rawData = JSON.parse(raw);
+
   parsed.pre.allData = rawData;
 
   setData(parsed);
@@ -49,6 +52,21 @@ export default function AnalysisPage() {
 
   setPointList(allNames);
   setSelectedPoints(selected.length ? selected : allNames);
+
+  const count = rawData.reduce(
+    (acc: { sekutu: number; uji: number }, item: any) => {
+      const status = item.status?.toLowerCase().trim();
+
+      if (status === "sekutu") acc.sekutu++;
+      else if (status === "uji") acc.uji++;
+
+      return acc;
+    },
+    { sekutu: 0, uji: 0 }
+  );
+
+  setJumlahSekutu(count.sekutu);
+  setJumlahUji(count.uji);
 
   const metodeLS = localStorage.getItem("metode");
   if (metodeLS) setMetode(metodeLS);
@@ -290,23 +308,7 @@ export default function AnalysisPage() {
         setSaving(false);
     }
   };
-const rawString = localStorage.getItem("rawInput");
-const raw = rawString ? JSON.parse(rawString) : [];
 
-const count = raw.reduce(
-  (acc: { sekutu: number; uji: number }, item: any) => {
-    const status = item.status?.toLowerCase().trim();
-
-    if (status === "sekutu") acc.sekutu++;
-    else if (status === "uji") acc.uji++;
-
-    return acc;
-  },
-  { sekutu: 0, uji: 0 }
-);
-
-const jumlahSekutu = count.sekutu;
-const jumlahUji = count.uji;
   return (
     <div className="p-6 space-y-6">
       {/* MAP */}
