@@ -61,7 +61,17 @@ export default function BandingkanPage() {
     const v = proj.parameter?.xVar?.[i]?.[i] || 0;
     return Math.sqrt(v);
   };
-
+  const Badge = ({ ok }: { ok: boolean }) => (
+  <span
+    className={`px-3 py-1 rounded-full text-xs font-semibold border
+    ${ok
+      ? "bg-emerald-100 text-emerald-700 border-emerald-300"
+      : "bg-red-100 text-red-600 border-red-300"
+    }`}
+  >
+    {ok ? "Memenuhi" : "Tidak"}
+  </span>
+);
   const getSignif = (proj: any, i: number) =>
     proj.parameter?.signif?.[i];
 
@@ -72,10 +82,10 @@ export default function BandingkanPage() {
       </h1>
 
       <div className="overflow-x-auto">
-        <table className="w-full border text-sm">
+        <table className="w-full border-separate border-spacing-y-2 text-sm">
 
           {/* HEADER LEVEL 1 */}
-          <thead className="bg-gray-200 text-center">
+          <thead className="bg-gradient-to-r from-blue-800 to-emerald-500 text-white text-center">
             <tr>
               <th className="border p-2">Item</th>
               <th colSpan={3} className="border p-2">
@@ -126,17 +136,17 @@ export default function BandingkanPage() {
 
   <tr>
     <td></td>
-    <td colSpan={3} className={p1.globalTest?.result ? "text-green-600" : "text-red-600"}>
-      {p1.globalTest?.result ? "Memenuhi" : "Tidak"}
-    </td>
-    <td colSpan={3} className={p2.globalTest?.result ? "text-green-600" : "text-red-600"}>
-      {p2.globalTest?.result ? "Memenuhi" : "Tidak"}
-    </td>
+    <td colSpan={3}>
+  <Badge ok={p1.globalTest?.result} />
+</td>
+    <td colSpan={3}>
+  <Badge ok={p2.globalTest?.result} />
+</td>
   </tr>
 
   {/* SNOOPING */}
-  <tr className="bg-gray-100 font-semibold">
-    <td>Snooping</td>
+  <tr className="bg-blue-50 text-blue-700 font-semibold">
+    <td>Data Snooping</td>
     <td colSpan={6}></td>
   </tr>
 
@@ -152,15 +162,15 @@ export default function BandingkanPage() {
     <td colSpan={3}>{snoop2.no}</td>
   </tr>
 
-  {/* PARAMETER HEADER (INI PENTING BANGET) */}
-  <tr className="bg-gray-100 font-semibold">
+  {/* PARAMETER HEADER */}
+  <tr className="bg-emerald-50 text-emerald-700 font-semibold">
     <td>Parameter</td>
     <td>Nilai</td>
     <td>Std</td>
-    <td>Signif</td>
+    <td>Signifikansi</td>
     <td>Nilai</td>
     <td>Std</td>
-    <td>Signif</td>
+    <td>Signifikansi</td>
   </tr>
 
   {/* PARAMETER */}

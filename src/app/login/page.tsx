@@ -49,33 +49,43 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-8 rounded-2xl shadow w-96">
-        <h1 className="text-2xl font-bold mb-4">Login</h1>
+    <div className="h-screen flex items-center justify-center bg-white">
+      <div className="bg-white p-8 rounded-2xl shadow-lg w-96 border border-gray-100">
+        
+        <h1 className="text-2xl font-bold mb-6 text-gray-800">
+          Login
+        </h1>
 
+        {/* INPUT EMAIL */}
         <input
-          className="w-full mb-3 p-2 border rounded"
+          className="w-full mb-3 p-3 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition"
           placeholder="Email"
           onChange={(e) => setEmail(e.target.value)}
           onKeyDown={handleKeyDown}
         />
 
+        {/* INPUT PASSWORD */}
         <input
           type="password"
-          className="w-full mb-4 p-2 border rounded"
+          className="w-full mb-5 p-3 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition"
           placeholder="Password"
           onChange={(e) => setPassword(e.target.value)}
           onKeyDown={handleKeyDown}
         />
 
+        {/* BUTTON */}
         <button
           onClick={handleLogin}
           disabled={loading}
-          className={`w-full py-2 rounded-lg text-white transition ${
-            loading
-              ? "bg-gray-400 cursor-not-allowed"
-              : "bg-blue-900 hover:bg-blue-800"
-          }`}
+          className={`
+            w-full py-3 rounded-lg text-white font-semibold
+            transition-all duration-200
+            ${
+              loading
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-gradient-to-r from-blue-700 to-emerald-500 hover:from-blue-800 hover:to-emerald-600 active:scale-[0.97] hover:-translate-y-[1px] shadow-md hover:shadow-lg"
+            }
+          `}
         >
           {loading ? (
             <div className="flex items-center justify-center gap-2">
@@ -87,10 +97,11 @@ export default function LoginPage() {
           )}
         </button>
 
-        <p className="mt-3 text-sm">
+        {/* LINK */}
+        <p className="mt-4 text-sm text-gray-600">
           Belum punya akun?{" "}
           <span
-            className="text-blue-600 cursor-pointer"
+            className="text-blue-600 hover:underline cursor-pointer"
             onClick={() => router.push("/register")}
           >
             Daftar

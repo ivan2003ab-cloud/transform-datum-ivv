@@ -151,12 +151,12 @@ export default function InputPage() {
         <div className="flex gap-3">
           <button
             onClick={() => setShowTemplatePopup(true)}
-            className="px-6 py-2 rounded-full bg-emerald-600 text-white hover:opacity-90"
+            className="px-6 py-2 rounded-full bg-gradient-to-r from-blue-600 to-blue-400 text-white hover:opacity-90"
           >
             Template
           </button>
 
-          <label className="px-6 py-2 rounded-full bg-emerald-800 text-white hover:opacity-90 cursor-pointer">
+          <label className="px-6 py-2 rounded-full bg-gradient-to-r from-emerald-800 to-emerald-600 text-white hover:opacity-90 cursor-pointer">
             Upload
             <input type="file" className="hidden" onChange={handleFileChange} />
           </label>
@@ -174,7 +174,7 @@ export default function InputPage() {
         {fileName && (
           <button
             onClick={() => setShowMap(true)}
-            className="px-6 py-2 rounded-full bg-gradient-to-r from-green-500 to-emerald-400 text-white hover:opacity-90"
+            className="px-6 py-2 rounded-full bg-gradient-to-r from-blue-600 to-blue-400 text-white hover:opacity-90"
           >
             Preview Map
           </button>
@@ -226,7 +226,7 @@ export default function InputPage() {
         <button
           onClick={handleProses}
           disabled={loading}
-          className="px-8 py-3 rounded-xl bg-emerald-800 text-white font-semibold hover:opacity-90 disabled:bg-gray-400"
+          className="px-8 py-3 rounded-xl bg-gradient-to-r from-emerald-800 to-emerald-600 text-white font-semibold hover:opacity-90 disabled:bg-gray-400"
         >
           {loading ? "Memproses..." : "Proses"}
         </button>
@@ -243,14 +243,14 @@ export default function InputPage() {
             <div className="flex flex-col gap-3">
               <button
                 onClick={() => downloadTemplate("cartesian")}
-                className="px-4 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-emerald-500 text-white hover:opacity-90"
+                className="px-4 py-2 rounded-lg bg-gradient-to-r from-blue-800 to-blue-600 text-white hover:opacity-90"
               >
                 Cartesian (XYZ)
               </button>
 
               <button
                 onClick={() => downloadTemplate("dd")}
-                className="px-4 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-emerald-400 text-white hover:opacity-90"
+                className="px-4 py-2 rounded-lg bg-gradient-to-r from-blue-800 to-blue-600 text-white hover:opacity-90"
               >
                 Geodetik (Degree)
               </button>

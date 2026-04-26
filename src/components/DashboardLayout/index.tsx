@@ -117,7 +117,7 @@ export default function DashboardLayout({
               {sidebarOpen && openMenu === "hitung" && (
                 <div className="ml-6 text-sm space-y-1">
                   <SubItem label="Input" href="/hitung_parameter/input" />
-                  <SubItem label="Result" href="/hitung_parameter/analysis" />
+                  <SubItem label="Analysis" href="/hitung_parameter/analysis" />
                 </div>
               )}
             </div>
@@ -132,12 +132,6 @@ export default function DashboardLayout({
               icon={<List size={18} />}
               label="Parameter Saya"
               href="/parameter_saya"
-              sidebarOpen={sidebarOpen}
-            />
-            <NavItem
-              icon={<User size={18} />}
-              label="Account"
-              href="/account"
               sidebarOpen={sidebarOpen}
             />
           </nav>

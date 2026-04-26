@@ -40,6 +40,14 @@ export default function AnalysisPage() {
 
   setData(parsed);
 
+  const metodeLS = localStorage.getItem("metode");
+  if (metodeLS) setMetode(metodeLS);
+}, []);
+useEffect(() => {
+  if (!data?.pre?.allData) return;
+
+  const rawData = data.pre.allData;
+
   const sekutuAll = rawData.filter(
     (d: any) => d.status?.toLowerCase().trim() === "sekutu"
   );
@@ -67,10 +75,7 @@ export default function AnalysisPage() {
 
   setJumlahSekutu(count.sekutu);
   setJumlahUji(count.uji);
-
-  const metodeLS = localStorage.getItem("metode");
-  if (metodeLS) setMetode(metodeLS);
-}, []);
+}, [data]);
 
   const togglePoint = (name: string) => {
     setSelectedPoints((prev) =>
@@ -486,88 +491,95 @@ export default function AnalysisPage() {
 
   {openModal === "editStatus" && (
   <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[9999]">
-    <div className="bg-white rounded-xl p-6 w-[900px] max-h-[80vh] overflow-auto">
+  <div className="bg-white rounded-xl w-[900px] max-h-[80vh] flex flex-col">
 
-      <h2 className="text-lg font-semibold mb-4">
-        Edit Status Titik
-      </h2>
+  {/* HEADER */}
+  <div className="px-6 py-4 border-b">
+    <h2 className="text-lg font-semibold">
+      Edit Status Titik
+    </h2>
+  </div>
 
+  {/* CONTENT */}
+  <div className="overflow-y-auto">
+  <div className="px-6 py-4">
       <table className="w-full text-sm border">
-  <thead className="bg-gray-200">
-    <tr>
-      <th className="border p-2">Point</th>
-      <th className="border p-2">X1</th>
-      <th className="border p-2">Y1</th>
-      <th className="border p-2">Z1</th>
-      <th className="border p-2">X2</th>
-      <th className="border p-2">Y2</th>
-      <th className="border p-2">Z2</th>
-      <th className="border p-2">Status</th>
-    </tr>
-  </thead>
+        <thead className="bg-gradient-to-r from-blue-800 to-blue-600 text-white sticky top-0 z-10">
+          <tr>
+            <th className="border p-2">Point</th>
+            <th className="border p-2">X1</th>
+            <th className="border p-2">Y1</th>
+            <th className="border p-2">Z1</th>
+            <th className="border p-2">X2</th>
+            <th className="border p-2">Y2</th>
+            <th className="border p-2">Z2</th>
+            <th className="border p-2">Status</th>
+          </tr>
+        </thead>
 
-  <tbody>
-    {editData.map((row, i) => (
-      <tr key={i} className="text-center">
-        <td className="border p-2">{row.point}</td>
+        <tbody>
+          {editData.map((row, i) => (
+            <tr key={i} className="text-center">
+              <td className="border p-2">{row.point}</td>
+              <td className="border p-2">{row.x1?.toFixed(3)}</td>
+              <td className="border p-2">{row.y1?.toFixed(3)}</td>
+              <td className="border p-2">{row.z1?.toFixed(3)}</td>
+              <td className="border p-2">{row.x2?.toFixed(3)}</td>
+              <td className="border p-2">{row.y2?.toFixed(3)}</td>
+              <td className="border p-2">{row.z2?.toFixed(3)}</td>
 
-        <td className="border p-2">{row.x1?.toFixed(3)}</td>
-        <td className="border p-2">{row.y1?.toFixed(3)}</td>
-        <td className="border p-2">{row.z1?.toFixed(3)}</td>
+              <td className="border p-2">
+                <select
+                  value={row.status}
+                  onChange={(e) => {
+                    const updated = [...editData];
+                    updated[i].status = e.target.value;
+                    setEditData(updated);
+                  }}
+                  className="border p-1 rounded"
+                >
+                  <option value="sekutu">sekutu</option>
+                  <option value="uji">uji</option>
+                </select>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
 
-        <td className="border p-2">{row.x2?.toFixed(3)}</td>
-        <td className="border p-2">{row.y2?.toFixed(3)}</td>
-        <td className="border p-2">{row.z2?.toFixed(3)}</td>
+    {/* FOOTER (GA IKUT SCROLL) */}
+    <div className="p-4 border-t flex justify-between bg-white">
+      <button
+        onClick={async () => {
+          const updated = editData.map((item) => {
+            if (item.status !== "sekutu") {
+              const { selected, ...rest } = item;
+              return rest;
+            }
+            return item;
+          });
 
-        <td className="border p-2">
-          <select
-            value={row.status}
-            onChange={(e) => {
-              const updated = [...editData];
-              updated[i].status = e.target.value;
-              setEditData(updated);
-            }}
-            className="border p-1 rounded"
-          >
-            <option value="sekutu">sekutu</option>
-            <option value="uji">uji</option>
-          </select>
-        </td>
-      </tr>
-    ))}
-  </tbody>
-</table>
+          await handleRecalculate(updated);
 
-      <div className="flex justify-between mt-4">
-        <button
-          onClick={async () => {
-  const updated = editData.map((item) => {
-    if (item.status !== "sekutu") {
-      const { selected, ...rest } = item;
-      return rest;
-    }
-    return item;
-  });
+          alert("Recalculate berhasil");
+          setOpenModal(null);
+        }}
+        className="px-4 py-2 bg-emerald-700 text-white rounded hover:bg-emerald-800 transition"
+      >
+        Recalculate
+      </button>
 
-  await handleRecalculate(updated);
-
-  alert("Recalculate berhasil");
-  setOpenModal(null);
-}}
-          className="px-4 py-2 bg-emerald-800 text-white rounded"
-        >
-          Recalculate
-        </button>
-
-        <button
-          onClick={() => setOpenModal(null)}
-          className="px-4 py-2 bg-gray-300 rounded"
-        >
-          Batal
-        </button>
-      </div>
+      <button
+        onClick={() => setOpenModal(null)}
+        className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 transition"
+      >
+        Batal
+      </button>
     </div>
   </div>
+  </div>
+</div>
 )}
 
   {/* ================= GLOBAL MODAL ================= */}
@@ -802,11 +814,11 @@ export default function AnalysisPage() {
         </div>
       ) : (
         <div className="space-y-2 text-sm">
-          <div>RMSE X: {data?.test?.rmse?.rmseX.toFixed(6)}</div>
-          <div>RMSE Y: {data?.test?.rmse?.rmseY.toFixed(6)}</div>
-          <div>RMSE Z: {data?.test?.rmse?.rmseZ.toFixed(6)}</div>
+          <div>RMSE X: {data?.test?.rmse?.rmseX.toFixed(6)} m</div>
+          <div>RMSE Y: {data?.test?.rmse?.rmseY.toFixed(6)} m</div>
+          <div>RMSE Z: {data?.test?.rmse?.rmseZ.toFixed(6)} m</div>
           <div className="font-semibold">
-            RMSE 3D: {data?.test?.rmse?.rmse3D.toFixed(6)}
+            RMSE 3D: {data?.test?.rmse?.rmse3D.toFixed(6)} m
           </div>
         </div>
       )}

@@ -73,7 +73,7 @@ export default function ParameterSayaPage() {
         test: {
           global: project.globalTest,
           snoop: {
-            result: project.snooping.w,
+            result: project.snooping.result,
             sqrtDiag: project.snooping.std,
           },
           signif: {
@@ -89,7 +89,8 @@ export default function ParameterSayaPage() {
         metode: project.metode,
       })
     );
-
+    localStorage.setItem(
+      "metode",project.metode)
     router.push("/hitung_parameter/analysis");
   };
   const handleCompare = () => {
@@ -149,7 +150,7 @@ export default function ParameterSayaPage() {
               
               {/* LEFT */}
               <div className="flex items-center gap-3">
-                {/* 🔥 CHECKBOX */}
+                {/* CHECKBOX */}
                 <input
                   type="checkbox"
                   checked={selectedIds.includes(proj.id)}
@@ -166,7 +167,7 @@ export default function ParameterSayaPage() {
                   <div className="text-sm text-gray-500">
                     {new Date(
                       proj.createdAt
-                    ).toLocaleString()}
+                    ).toLocaleString()}, Metode: {proj.metode}
                   </div>
                 </div>
               </div>

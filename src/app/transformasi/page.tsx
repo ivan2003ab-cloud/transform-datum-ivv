@@ -136,14 +136,14 @@ export default function TransformPage() {
       <h1 className="text-2xl font-bold mb-6">Transformasi Koordinat</h1>
 
       {/* HEADER INPUT */}
-      <div className="bg-gray-200 p-4 rounded-xl flex justify-between items-center mb-6">
+      <div className="bg-gradient-to-r from-blue-100 to-emerald-100 p-4 rounded-xl flex justify-between items-center mb-6">
         <span className="font-semibold text-blue-900">Input data</span>
 
         <div className="flex gap-3">
-          <button className="bg-blue-700 text-white px-5 py-2 rounded-full">
+          <button className="bg-gradient-to-r from-blue-600 to-blue-400 text-white px-5 py-2 rounded-full">
             Template
           </button>
-          <label className="bg-blue-500 text-white px-5 py-2 rounded-full cursor-pointer">
+          <label className="bg-gradient-to-r from-emerald-800 to-emerald-600 text-white px-5 py-2 rounded-full cursor-pointer">
             Upload
             <input type="file" onChange={handleFileChange} hidden />
           </label>
@@ -181,33 +181,66 @@ export default function TransformPage() {
             Parameter Transformasi
           </h2>
 
-          <div className="grid grid-cols-3 gap-y-3 max-w-xl">
-            {Object.keys(params).map((key) => (
-              <div key={key} className="contents">
-                <div className="font-medium uppercase">{key}</div>
+          <div className="grid grid-cols-2 gap-6 max-w-3xl">
+  
+  {/* KOLOM KIRI */}
+  <div className="space-y-3">
+    {["tx", "ty", "tz"].map((key) => (
+      <div key={key} className="grid grid-cols-3 items-center gap-2">
+        <div className="font-medium uppercase">{key}</div>
 
-                <input
-                  value={(params as any)[key]}
-                  onChange={(e) =>
-                    setParams({ ...params, [key]: e.target.value })
-                  }
-                  className="border border-gray-300 p-2 rounded w-full bg-white"
-                />
+        <input
+          value={(params as any)[key]}
+          onChange={(e) =>
+            setParams({ ...params, [key]: e.target.value })
+          }
+          className="border p-2 rounded w-full"
+        />
 
-                <div className="text-sm text-gray-600">
-                  {key.startsWith("t")
-                    ? "m"
-                    : key.startsWith("r")
-                    ? angleUnit === "degree"
-                      ? "deg"
-                      : "rad"
-                    : key === "s"
-                    ? "ppm"
-                    : ""}
-                </div>
-              </div>
-            ))}
-          </div>
+        <div className="text-sm text-gray-600">m</div>
+      </div>
+    ))}
+  </div>
+
+  {/* KOLOM KANAN */}
+  <div className="space-y-3">
+    {["rx", "ry", "rz"].map((key) => (
+      <div key={key} className="grid grid-cols-3 items-center gap-2">
+        <div className="font-medium uppercase">{key}</div>
+
+        <input
+          value={(params as any)[key]}
+          onChange={(e) =>
+            setParams({ ...params, [key]: e.target.value })
+          }
+          className="border p-2 rounded w-full"
+        />
+
+        <div className="text-sm text-gray-600">
+          {angleUnit === "degree" ? "deg" : "rad"}
+        </div>
+      </div>
+    ))}
+  </div>
+
+</div>
+
+{/* S di bawah */}
+<div className="mt-4 max-w-xl">
+  <div className="grid grid-cols-3 items-center gap-2">
+    <div className="font-medium uppercase">S</div>
+
+    <input
+      value={params.s}
+      onChange={(e) =>
+        setParams({ ...params, s: e.target.value })
+      }
+      className="border p-2 rounded w-full"
+    />
+
+    <div className="text-sm text-gray-600">ppm</div>
+  </div>
+</div>
         </div>
 
         {/* FOOTER */}
