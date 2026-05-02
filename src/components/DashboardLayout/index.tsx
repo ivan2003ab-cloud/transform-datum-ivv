@@ -46,7 +46,7 @@ export default function DashboardLayout({
         <div className="flex items-center gap-3">
           <Image src="/logo.png" alt="Logo" width={40} height={40} />
           <Link className="font-semibold" href="/">
-            Transformasi Datum
+            TransDatum
           </Link>
         </div>
 

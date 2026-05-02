@@ -9,269 +9,308 @@ import { runAdjustment } from "@/lib/runAdjustment";
 import { Upload } from "lucide-react";
 
 const MapParamInput = dynamic(
-() => import("@/components/Map/mapParamInput"),
-{ ssr: false }
+  () => import("@/components/Map/mapParamInput"),
+  { ssr: false }
 );
 
 export default function InputPage() {
-const router = useRouter();
+  const router = useRouter();
 
-const [struktur, setStruktur] = useState("cartesian");
-const [metode, setMetode] = useState("bursa");
-const [fileName, setFileName] = useState<string | null>(null);
-const [parsedData, setParsedData] = useState<any[]>([]);
-const [loading, setLoading] = useState(false);
-const [parsing, setParsing] = useState(false);
-const [showTemplatePopup, setShowTemplatePopup] = useState(false);
+  const [struktur, setStruktur] = useState("cartesian");
+  const [metode, setMetode] = useState("bursa");
+  const [fileName, setFileName] = useState<string | null>(null);
+  const [parsedData, setParsedData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [parsing, setParsing] = useState(false);
+  const [showTemplatePopup, setShowTemplatePopup] = useState(false);
 
-const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-const file = e.target.files?.[0];
-if (!file) return;
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-setParsing(true);
-setFileName(file.name);
+    setParsing(true);
+    setFileName(file.name);
 
-const buffer = await file.arrayBuffer();
-const workbook = XLSX.read(buffer);
+    const buffer = await file.arrayBuffer();
+    const workbook = XLSX.read(buffer);
 
-const sheet = workbook.Sheets[workbook.SheetNames[0]];
-const json = XLSX.utils.sheet_to_json(sheet);
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const json = XLSX.utils.sheet_to_json(sheet);
 
-let formatted: any[] = [];
+    const header = XLSX.utils.sheet_to_json(sheet, { header: 1 })[0] as string[];
 
-if (struktur === "cartesian") {
-  formatted = json.map((row: any) => ({
-    point: row.Titik,
-    status: row.Status?.toLowerCase(),
-    selected: "selected",
-    x1: row.X1,
-    y1: row.Y1,
-    z1: row.Z1,
-    x2: row.X2,
-    y2: row.Y2,
-    z2: row.Z2,
-    sx2: row.SX2,
-    sy2: row.SY2,
-    sz2: row.SZ2,
-  }));
-} else {
-  const geo = json.map((row: any) => ({
-    point: row.Titik,
-    status: row.Status?.toLowerCase(),
-    selected: "selected",
-    lat1: row.Lat1,
-    lon1: row.Lon1,
-    h1: row.H1,
-    lat2: row.Lat2,
-    lon2: row.Lon2,
-    h2: row.H2,
-    sx2: row.SX2,
-    sy2: row.SY2,
-    sz2: row.SZ2,
-  }));
+    const requiredCartesian = [
+      "Titik",
+      "Status",
+      "X1",
+      "Y1",
+      "Z1",
+      "X2",
+      "Y2",
+      "Z2",
+      "SX2",
+      "SY2",
+      "SZ2",
+    ];
 
-  formatted = normalizeToCartesian(geo, struktur);
-}
+    const requiredGeo = [
+      "Titik",
+      "Status",
+      "Lat1",
+      "Lon1",
+      "H1",
+      "Lat2",
+      "Lon2",
+      "H2",
+      "SX2",
+      "SY2",
+      "SZ2",
+    ];
 
-setParsedData(formatted);
+    const required =
+      struktur === "cartesian" ? requiredCartesian : requiredGeo;
 
-const pointList = formatted.map((item) => item.point);
-localStorage.setItem("points", JSON.stringify(pointList));
+    const isValid = required.every((col) => header.includes(col));
 
-setParsing(false);
+    if (!isValid) {
+      alert(
+        `Format file tidak sesuai template.\nKolom wajib:\n${required.join(", ")}`
+      );
+      setParsing(false);
+      setParsedData([]);
+      return;
+    }
 
+    let formatted: any[] = [];
 
-};
+    if (struktur === "cartesian") {
+      formatted = json.map((row: any) => ({
+        point: row.Titik,
+        status: row.Status?.toLowerCase(),
+        selected: "selected",
+        x1: row.X1,
+        y1: row.Y1,
+        z1: row.Z1,
+        x2: row.X2,
+        y2: row.Y2,
+        z2: row.Z2,
+        sx2: row.SX2,
+        sy2: row.SY2,
+        sz2: row.SZ2,
+      }));
+    } else {
+      const geo = json.map((row: any) => ({
+        point: row.Titik,
+        status: row.Status?.toLowerCase(),
+        selected: "selected",
+        lat1: row.Lat1,
+        lon1: row.Lon1,
+        h1: row.H1,
+        lat2: row.Lat2,
+        lon2: row.Lon2,
+        h2: row.H2,
+        sx2: row.SX2,
+        sy2: row.SY2,
+        sz2: row.SZ2,
+      }));
 
-const downloadTemplate = (type: string) => {
-let filePath = "";
+      formatted = normalizeToCartesian(geo, struktur);
+    }
 
+    setParsedData(formatted);
 
-if (type === "cartesian") {
-  filePath = "/template-hitungparams-kartesi.xlsx";
-} else {
-  filePath = "/template-hitungparams-geodetik.xlsx";
-}
+    const pointList = formatted.map((item) => item.point);
+    localStorage.setItem("points", JSON.stringify(pointList));
 
-const link = document.createElement("a");
-link.href = filePath;
-const fileName = filePath.split("/").pop();
-link.download = fileName || "template.xlsx";
-link.click();
+    setParsing(false);
+  };
 
-setShowTemplatePopup(false);
+  const downloadTemplate = (type: string) => {
+    let filePath = "";
 
+    if (type === "cartesian") {
+      filePath = "/template-hitungparams-kartesi.xlsx";
+    } else {
+      filePath = "/template-hitungparams-geodetik.xlsx";
+    }
 
-};
+    const link = document.createElement("a");
+    link.href = filePath;
+    link.download = filePath.split("/").pop() || "template.xlsx";
+    link.click();
 
-const handleProses = async () => {
-if (!parsedData || parsedData.length === 0) {
-alert("Upload file dahulu sebelum memproses.");
-return;
-}
+    setShowTemplatePopup(false);
+  };
 
+  const handleProses = async () => {
+    if (!parsedData || parsedData.length === 0) {
+      alert("Upload file dahulu sebelum memproses.");
+      return;
+    }
+    const jumlahSekutu = parsedData.filter(
+      (item) => item.status?.toLowerCase() === "sekutu"
+      ).length;
 
-try {
-  setLoading(true);
+    if (jumlahSekutu < 3) {
+      alert("Minimal diperlukan 3 titik sekutu untuk melakukan perhitungan.");
+      return;
+  }
+    try {
+      setLoading(true);
 
-  const result = await runAdjustment(parsedData, metode);
+      const result = await runAdjustment(parsedData, metode);
 
-  localStorage.setItem("rawInput", JSON.stringify(parsedData));
-  localStorage.setItem("hasil", JSON.stringify(result));
-  localStorage.setItem("metode", metode);
+      localStorage.setItem("rawInput", JSON.stringify(parsedData));
+      localStorage.setItem("hasil", JSON.stringify(result));
+      localStorage.setItem("metode", metode);
 
-  router.push("/hitung_parameter/analysis");
-} catch (err) {
-  console.error(err);
-  alert("Error saat memproses data.");
-} finally {
-  setLoading(false);
-}
+      router.push("/hitung_parameter/analysis");
+    } catch (err) {
+      console.error(err);
+      alert("Error saat memproses data.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-};
+  const strukturOptions = [
+    { value: "cartesian", label: "Cartesian" },
+    { value: "dd", label: "Geodetik (DD.DDDDD)" },
+    { value: "dms", label: "Geodetik (DD.MMSSSS)" },
+  ];
 
-const strukturOptions = [
-{ value: "cartesian", label: "Cartesian" },
-{ value: "dd", label: "Geodetik (DD.DDDDD)" },
-{ value: "dms", label: "Geodetik (DD.MMSSSS)" },
-];
+  const metodeOptions = [
+    { value: "bursa", label: "Bursa-Wolf" },
+    { value: "molodensky", label: "Molodensky Badekas" },
+  ];
 
-const metodeOptions = [
-{ value: "bursa", label: "Bursa-Wolf" },
-{ value: "molodensky", label: "Molodensky Badekas" },
-];
-
-return ( <div className="p-6 space-y-4">
-
-  {/* MAP */}
-  <div className="rounded-3xl h-[300px] overflow-hidden border border-gray-200">
-    {parsing ? (
-      <div className="flex items-center justify-center h-full text-gray-400">
-        Memuat data...
+  return (
+    <div className="p-6 space-y-4">
+      <div className="rounded-3xl h-[300px] overflow-hidden border border-gray-200">
+        {parsing ? (
+          <div className="flex items-center justify-center h-full text-gray-400">
+            Memuat data...
+          </div>
+        ) : parsedData.length > 0 ? (
+          <MapParamInput data={parsedData} struktur={struktur} />
+        ) : (
+          <div className="flex items-center justify-center h-full text-gray-400">
+            Upload file untuk melihat preview map
+          </div>
+        )}
       </div>
-    ) : parsedData.length > 0 ? (
-      <MapParamInput data={parsedData} struktur={struktur} />
-    ) : (
-      <div className="flex items-center justify-center h-full text-gray-400">
-        Upload file untuk melihat preview map
+
+      <div className="bg-gradient-to-r from-blue-100 to-emerald-100 rounded-xl px-4 py-3 flex items-center justify-between">
+        <span className="text-sm font-medium text-blue-900">
+          Input data
+        </span>
+
+        <div className="flex gap-3">
+          <button
+            onClick={() => setShowTemplatePopup(true)}
+            className="px-6 py-2 rounded-full bg-gradient-to-r from-blue-600 to-blue-400 text-white hover:opacity-90"
+          >
+            Template
+          </button>
+
+          <label className="px-6 py-2 flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-800 to-emerald-600 text-white hover:opacity-90 cursor-pointer">
+            <Upload size={16} />
+            Upload
+            <input
+              type="file"
+              className="hidden"
+              onChange={handleFileChange}
+            />
+          </label>
+        </div>
       </div>
-    )}
-  </div>
 
-  {/* INPUT */}
-  <div className="bg-gradient-to-r from-blue-100 to-emerald-100 rounded-xl px-4 py-3 flex items-center justify-between">
-    <span className="text-sm font-medium text-blue-900">
-      Input data
-    </span>
+      {fileName && (
+        <div className="text-sm text-gray-600">
+          {fileName} ({parsedData.length} titik)
+        </div>
+      )}
 
-    <div className="flex gap-3">
-      <button
-        onClick={() => setShowTemplatePopup(true)}
-        className="px-6 py-2 rounded-full bg-gradient-to-r from-blue-600 to-blue-400 text-white hover:opacity-90"
-      >
-        Template
-      </button>
-
-      <label className="px-6 py-2 flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-800 to-emerald-600 text-white hover:opacity-90 cursor-pointer">
-        <Upload size={16} />
-        Upload
-        <input type="file" className="hidden" onChange={handleFileChange} />
-      </label>
-    </div>
-  </div>
-
-  {/* FILE INFO */}
-  {fileName && (
-    <div className="text-sm text-gray-600">
-      {fileName} ({parsedData.length} titik)
-    </div>
-  )}
-
-  {/* STRUKTUR */}
-  <div>
-    <h2 className="font-semibold text-lg mb-3 text-blue-900">
-      Struktur data
-    </h2>
-
-    <div className="grid grid-cols-3 gap-6">
-      {strukturOptions.map((item) => (
-        <label key={item.value} className="flex items-center gap-2">
-          <input
-            type="radio"
-            checked={struktur === item.value}
-            onChange={() => setStruktur(item.value)}
-          />
-          {item.label}
-        </label>
-      ))}
-    </div>
-  </div>
-
-  {/* METODE */}
-  <div>
-    <h2 className="font-semibold text-lg mb-3 text-blue-900">
-      Metode Perataan
-    </h2>
-
-    <div className="grid grid-cols-3 gap-6">
-      {metodeOptions.map((item) => (
-        <label key={item.value} className="flex items-center gap-2">
-          <input
-            type="radio"
-            checked={metode === item.value}
-            onChange={() => setMetode(item.value)}
-          />
-          {item.label}
-        </label>
-      ))}
-    </div>
-  </div>
-
-  {/* BUTTON */}
-  <div className="flex justify-end">
-    <button
-      onClick={handleProses}
-      disabled={loading}
-      className="px-8 py-3 rounded-xl bg-gradient-to-r from-emerald-800 to-emerald-600 text-white font-semibold hover:opacity-90 disabled:bg-gray-400"
-    >
-      {loading ? "Memproses..." : "Proses"}
-    </button>
-  </div>
-
-  {/* POPUP */}
-  {showTemplatePopup && (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white rounded-2xl p-6 w-[350px] space-y-4 shadow-xl">
-        <h2 className="text-lg font-semibold text-blue-900">
-          Pilih Template
+      <div>
+        <h2 className="font-semibold text-lg mb-3 text-blue-900">
+          Struktur data
         </h2>
 
-        <div className="flex flex-col gap-3">
-          <button
-            onClick={() => downloadTemplate("cartesian")}
-            className="px-4 py-2 rounded-lg bg-gradient-to-r from-blue-800 to-blue-600 text-white hover:opacity-90"
-          >
-            Cartesian (XYZ)
-          </button>
-
-          <button
-            onClick={() => downloadTemplate("dd")}
-            className="px-4 py-2 rounded-lg bg-gradient-to-r from-blue-800 to-blue-600 text-white hover:opacity-90"
-          >
-            Geodetik (Degree)
-          </button>
+        <div className="grid grid-cols-3 gap-6">
+          {strukturOptions.map((item) => (
+            <label key={item.value} className="flex items-center gap-2">
+              <input
+                type="radio"
+                checked={struktur === item.value}
+                onChange={() => setStruktur(item.value)}
+              />
+              {item.label}
+            </label>
+          ))}
         </div>
+      </div>
 
+      <div>
+        <h2 className="font-semibold text-lg mb-3 text-blue-900">
+          Metode Perataan
+        </h2>
+
+        <div className="grid grid-cols-3 gap-6">
+          {metodeOptions.map((item) => (
+            <label key={item.value} className="flex items-center gap-2">
+              <input
+                type="radio"
+                checked={metode === item.value}
+                onChange={() => setMetode(item.value)}
+              />
+              {item.label}
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex justify-end">
         <button
-          onClick={() => setShowTemplatePopup(false)}
-          className="text-sm text-gray-500 hover:underline"
+          onClick={handleProses}
+          disabled={loading}
+          className="px-8 py-3 rounded-xl bg-gradient-to-r from-emerald-800 to-emerald-600 text-white font-semibold hover:opacity-90 disabled:bg-gray-400"
         >
-          Batal
+          {loading ? "Memproses..." : "Proses"}
         </button>
       </div>
-    </div>
-  )}
-</div>
 
-);
+      {showTemplatePopup && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-6 w-[350px] space-y-4 shadow-xl">
+            <h2 className="text-lg font-semibold text-blue-900">
+              Pilih Template
+            </h2>
+
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => downloadTemplate("cartesian")}
+                className="px-4 py-2 rounded-lg bg-gradient-to-r from-blue-800 to-blue-600 text-white hover:opacity-90"
+              >
+                Cartesian (XYZ)
+              </button>
+
+              <button
+                onClick={() => downloadTemplate("dd")}
+                className="px-4 py-2 rounded-lg bg-gradient-to-r from-blue-800 to-blue-600 text-white hover:opacity-90"
+              >
+                Geodetik (Degree)
+              </button>
+            </div>
+
+            <button
+              onClick={() => setShowTemplatePopup(false)}
+              className="text-sm text-gray-500 hover:underline"
+            >
+              Batal
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
