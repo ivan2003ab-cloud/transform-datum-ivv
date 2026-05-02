@@ -57,7 +57,7 @@ useEffect(() => {
     (acc: { sekutu: number; uji: number }, item: any) => {
       const status = item.status?.toLowerCase().trim();
 
-      if (status === "sekutu") acc.sekutu++;
+      if (status === "sekutu" && item.selected === "selected") acc.sekutu++;
       else if (status === "uji") acc.uji++;
 
       return acc;
@@ -158,6 +158,16 @@ useEffect(() => {
     });
   };
   const handleRecalculate = async (rawData: any) => {
+    const jumlahSekutuAktif = rawData.filter(
+    (item: any) =>
+      item.status?.toLowerCase().trim() === "sekutu" &&
+      item.selected === "selected"
+  ).length;
+
+  if (jumlahSekutuAktif < 3) {
+    alert("Minimal diperlukan 3 titik sekutu aktif.");
+    return;
+  }
     localStorage.setItem("rawInput", JSON.stringify(rawData));
 
   const result = await runAdjustment(rawData, metode!);
