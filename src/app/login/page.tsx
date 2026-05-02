@@ -1,16 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, user } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      router.replace("/");
+    }
+  }, [user, router]);
 
   const handleLogin = async () => {
     if (loading) return;
@@ -30,7 +36,7 @@ export default function LoginPage() {
 
       if (data.token) {
         login(data);
-        router.push("/");
+        router.replace("/"); 
       } else {
         alert(data.error);
       }
@@ -51,7 +57,7 @@ export default function LoginPage() {
   return (
     <div className="h-screen flex items-center justify-center bg-white">
       <div className="bg-white p-8 rounded-2xl shadow-lg w-96 border border-gray-100">
-        
+
         <h1 className="text-2xl font-bold mb-6 text-gray-800">
           Login
         </h1>

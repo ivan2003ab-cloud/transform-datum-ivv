@@ -100,7 +100,6 @@ export default function MapParamInput({
   };
 
   const geoData = toGeodetic();
-  console.log("geoData:", geoData);
   return (
     <MapContainer
       center={[-7.8, 110.4]} // fallback

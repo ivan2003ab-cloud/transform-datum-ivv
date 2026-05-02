@@ -6,6 +6,13 @@ import { runAdjustment } from "@/lib/runAdjustment";
 import { ecefToGeodetic } from "@/lib/coordinateConverter";
 import { useRouter } from "next/navigation";
 import ResidualChart from "@/components/Chart/analysis";
+import UjiGlobal from "@/components/Dialogs/UjiGlobal";
+import DataSnooping from "@/components/Dialogs/DataSnooping";
+import RmseDialog from "@/components/Dialogs/rmse";
+import EditStatus from "@/components/Dialogs/EditStatus";
+import SaveProject from "@/components/Dialogs/SaveProject";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Pencil, Save } from "lucide-react";
 
 const MapParamAnalysis = dynamic(
   () => import("@/components/Map/mapParamAnalysis"),
@@ -17,9 +24,6 @@ export default function AnalysisPage() {
   const [openModal, setOpenModal] = useState<string | null>(null);
   const [data, setData] = useState<any>(null);
   const [metode, setMetode] = useState<string | null>(null);
-  const [pointList, setPointList] = useState<string[]>([]);
-  const [viewMode, setViewMode] = useState<"map" | "chart">("map");
-  const [selectedPoints, setSelectedPoints] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [projectName, setProjectName] = useState("");
@@ -27,7 +31,7 @@ export default function AnalysisPage() {
   const [jumlahSekutu, setJumlahSekutu] = useState(0);
   const [jumlahUji, setJumlahUji] = useState(0);
 
-  useEffect(() => {
+useEffect(() => {
   const stored = localStorage.getItem("hasil");
   const raw = localStorage.getItem("rawInput");
 
@@ -36,6 +40,7 @@ export default function AnalysisPage() {
   const parsed = JSON.parse(stored);
   const rawData = JSON.parse(raw);
 
+  // penting: inject raw terbaru
   parsed.pre.allData = rawData;
 
   setData(parsed);
@@ -47,19 +52,6 @@ useEffect(() => {
   if (!data?.pre?.allData) return;
 
   const rawData = data.pre.allData;
-
-  const sekutuAll = rawData.filter(
-    (d: any) => d.status?.toLowerCase().trim() === "sekutu"
-  );
-
-  const allNames = sekutuAll.map((d: any) => d.point);
-
-  const selected = sekutuAll
-    .filter((d: any) => d.selected === "selected")
-    .map((d: any) => d.point);
-
-  setPointList(allNames);
-  setSelectedPoints(selected.length ? selected : allNames);
 
   const count = rawData.reduce(
     (acc: { sekutu: number; uji: number }, item: any) => {
@@ -75,15 +67,8 @@ useEffect(() => {
 
   setJumlahSekutu(count.sekutu);
   setJumlahUji(count.uji);
-}, [data]);
 
-  const togglePoint = (name: string) => {
-    setSelectedPoints((prev) =>
-      prev.includes(name)
-      ? prev.filter((p) => p !== name)
-      : [...prev, name]
-    );
-  };
+}, [data]);
 
   const openEditStatus = () => {
     const raw = JSON.parse(localStorage.getItem("rawInput") || "[]");
@@ -93,7 +78,9 @@ useEffect(() => {
   const snoopRows = useMemo(() => {
   if (!data || !data.adj || !data.test) return [];
 
-  const sekutu = (data.pre.allData || []).filter(
+  const raw = data.pre.allData || [];
+
+  const sekutu = raw.filter(
     (d: any) => d.status?.toLowerCase().trim() === "sekutu"
   );
 
@@ -106,38 +93,37 @@ useEffect(() => {
   return sekutu.map((row: any) => {
     const active = row.selected === "selected";
 
-    if (active) {
-      const base = calcIndex * 3;
-      calcIndex++;
-
+    if (!active) {
       return {
         no: row.point,
         selected: row.selected,
-        vx: v[base]?.[0] ?? v[base] ?? null,
-        vy: v[base + 1]?.[0] ?? v[base + 1] ?? null,
-        vz: v[base + 2]?.[0] ?? v[base + 2] ?? null,
-        svx: std[base],
-        svy: std[base + 1],
-        svz: std[base + 2],
-        statusX: res[base],
-        statusY: res[base + 1],
-        statusZ: res[base + 2],
+        vx: null,
+        vy: null,
+        vz: null,
+        svx: null,
+        svy: null,
+        svz: null,
+        statusX: null,
+        statusY: null,
+        statusZ: null,
       };
     }
+
+    const base = calcIndex * 3;
+    calcIndex++;
 
     return {
       no: row.point,
       selected: row.selected,
-      vx: null,
-      vy: null,
-      vz: null,
-      svx: null,
-      svy: null,
-      svz: null,
-      statusX: null,
-      statusY: null,
-      statusZ: null,
-      disabled: true,
+      vx: v[base]?.[0] ?? v[base],
+      vy: v[base + 1]?.[0] ?? v[base + 1],
+      vz: v[base + 2]?.[0] ?? v[base + 2],
+      svx: std[base],
+      svy: std[base + 1],
+      svz: std[base + 2],
+      statusX: res[base],
+      statusY: res[base + 1],
+      statusZ: res[base + 2],
     };
   });
 }, [data]);
@@ -268,6 +254,8 @@ useEffect(() => {
           avgX: data?.pre?.avgX,
           avgY: data?.pre?.avgY,
           avgZ: data?.pre?.avgZ,
+          titikSekutu: data?.pre?.titikSekutu,
+          titikUji: data?.pre?.titikUji,
           },
           globalTest: {
             result: data?.test?.global?.result,
@@ -315,63 +303,72 @@ useEffect(() => {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      {/* MAP */}
-      <div className="relative rounded-3xl h-[400px] overflow-hidden">
+    <div className="p-2 space-y-2">
 
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] flex gap-2">
-          <button
-            onClick={() => setViewMode("map")}
-            className={`px-4 py-1 rounded-full text-sm ${
-              viewMode === "map"
-                ? "bg-blue-900 text-white"
-                : "bg-white"
-            }`}
-          >
-            Peta
-          </button>
+    <Tabs defaultValue="map" className="w-full">
 
-          <button
-            onClick={() => setViewMode("chart")}
-            className={`px-4 py-1 rounded-full text-sm ${
-              viewMode === "chart"
-                ? "bg-blue-900 text-white"
-                : "bg-white"
-            }`}
-          >
-            Grafik
-          </button>
-        </div>
+  {/* TAB SWITCH */}
+  <div className="w-full flex justify-center">
+    <TabsList className="bg-white border rounded-xl p-1 shadow">
+      <TabsTrigger value="map" className="
+    px-4 py-1 rounded-lg transition
+    data-[state=active]:bg-gradient-to-r
+    data-[state=active]:from-blue-600
+    data-[state=active]:to-emerald-600
+    data-[state=active]:text-white
+  ">Peta</TabsTrigger>
+      <TabsTrigger value="chart" className="
+    px-4 py-1 rounded-lg transition
+    data-[state=active]:bg-gradient-to-r
+    data-[state=active]:from-blue-600
+    data-[state=active]:to-emerald-600
+    data-[state=active]:text-white
+  ">Grafik</TabsTrigger>
+    </TabsList>
+  </div>
 
-        {/* CONDITIONAL VIEW */}
-        {data && viewMode === "map" && (
-          <MapParamAnalysis data={buildMapData()} />
-        )}
+  {/* CONTENT WRAPPER */}
+  <div className="relative w-full h-[45vh] min-h-[300px] max-h-[500px] rounded-3xl border border-gray-200 overflow-hidden">
 
-        {data && viewMode === "chart" && (
-          <ResidualChart
-            raw={JSON.parse(localStorage.getItem("rawInput") || "[]")}
-  v={data?.adj?.v || []}
-  rmse={data?.test?.rmse}
-          />
-        )}
-    </div>
+    <TabsContent value="map" className="h-full mt-0">
+      <MapParamAnalysis data={buildMapData()} />
+    </TabsContent>
+
+    <TabsContent value="chart" className="h-full mt-0">
+      <ResidualChart
+        raw={data?.pre?.allData || []}
+        v={data?.adj?.v || []}
+        rmse={data?.test?.rmse}
+      />
+    </TabsContent>
+
+  </div>
+
+</Tabs>
     <div className="flex items-center justify-between mb-6">
   <div className="flex gap-4">
-    <div className="px-5 py-2 bg-blue-300 rounded-full text-sm font-medium">
+    <div className="px-5 py-2 border border-blue-300 text-blue-600 rounded-xl text-sm font-medium bg-blue-50">
       Jumlah Titik Sekutu: {jumlahSekutu}
     </div>
-    <div className="px-5 py-2 bg-blue-300 rounded-full text-sm font-medium">
+    <div className="px-5 py-2 border border-blue-300 text-blue-600 rounded-xl text-sm font-medium bg-blue-50">
       Jumlah Titik Uji: {jumlahUji}
     </div>
   </div>
 
   <button
-    onClick={openEditStatus}
-    className="px-6 py-2 bg-emerald-700 text-white rounded-full text-sm font-semibold hover:bg-emerald-600 transition"
-  >
-    Edit Status Titik
-  </button>
+  onClick={openEditStatus}
+  className="
+    px-6 py-2 flex items-center gap-2
+    bg-gradient-to-r from-emerald-700 to-emerald-600
+    text-white rounded-full text-sm font-semibold
+    transition-all duration-200
+    hover:-translate-y-1 hover:scale-[1.03]
+    hover:shadow-lg active:scale-[0.97]
+  "
+>
+  <Pencil size={16} />
+  Edit Status Titik
+</button>
 </div>
       {/* RESULT LIST */}
       <div className="space-y-4">
@@ -392,7 +389,9 @@ useEffect(() => {
 
           <button
             onClick={() => setOpenModal("global")}
-            className="px-6 py-2 rounded-full bg-blue-900 text-white hover:bg-blue-800"
+            className="px-6 py-2 rounded-full bg-gradient-to-r from-blue-900 to-blue-700 text-white hover:bg-blue-800 transition-all duration-200
+  hover:-translate-y-1 hover:scale-[1.03]
+  hover:shadow-lg active:scale-[0.97]"
           >
             Detail
           </button>
@@ -404,7 +403,9 @@ useEffect(() => {
 
           <button
             onClick={() => setOpenModal("snooping")}
-            className="px-6 py-2 rounded-full bg-blue-900 text-white hover:bg-blue-800"
+            className="px-6 py-2 rounded-full bg-gradient-to-r from-blue-900 to-blue-700 text-white hover:bg-blue-800 transition-all duration-200
+  hover:-translate-y-1 hover:scale-[1.03]
+  hover:shadow-lg active:scale-[0.97]"
           >
             Detail
           </button>
@@ -416,7 +417,9 @@ useEffect(() => {
 
           <button
             onClick={() => setOpenModal("rmse")}
-            className="px-6 py-2 rounded-full bg-blue-900 text-white"
+            className="px-6 py-2 rounded-full bg-gradient-to-r from-blue-900 to-blue-700 text-white hover:bg-blue-800 transition-all duration-200
+  hover:-translate-y-1 hover:scale-[1.03]
+  hover:shadow-lg active:scale-[0.97]"
           >
             Detail
           </button>
@@ -469,15 +472,19 @@ useEffect(() => {
 
             <button
               onClick={() => setOpenModal("save")}
-              className="px-6 py-2 rounded-full bg-green-600 text-white hover:bg-green-500"
+              className="px-6 py-2 flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-600 to-emerald-500 text-white hover:bg-green-500 transition-all duration-200
+  hover:-translate-y-1 hover:scale-[1.03]
+  hover:shadow-lg active:scale-[0.97]"
             >
-              Simpan
+              <Save size={16} /> Simpan
             </button>
 
 
             <button
               onClick={handleToTransform}
-              className="px-6 py-2 bg-blue-900 text-white rounded-xl hover:bg-blue-800"
+              className="px-6 py-2 bg-gradient-to-r from-blue-900 to-blue-700 text-white rounded-xl hover:bg-blue-800 transition-all duration-200
+  hover:-translate-y-1 hover:scale-[1.03]
+  hover:shadow-lg active:scale-[0.97]"
             >
               Lanjutkan Transformasi Datum →
             </button>
@@ -487,409 +494,41 @@ useEffect(() => {
       </div>
 
       {/* MODAL */}
-      <>
+  <EditStatus
+  open={openModal === "editStatus"}
+  onOpenChange={(v:any) => !v && setOpenModal(null)}
+  editData={editData}
+  setEditData={setEditData}
+  handleRecalculate={handleRecalculate}
+/>
+<UjiGlobal
+  open={openModal === "global"}
+  onOpenChange={(v:any) => !v && setOpenModal(null)}
+  data={data}
+/>
 
-  {openModal === "editStatus" && (
-  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[9999]">
-  <div className="bg-white rounded-xl w-[900px] max-h-[80vh] flex flex-col">
+<RmseDialog
+  open={openModal === "rmse"}
+  onOpenChange={(v:any) => !v && setOpenModal(null)}
+  data={data}
+/>
 
-  {/* HEADER */}
-  <div className="px-6 py-4 border-b">
-    <h2 className="text-lg font-semibold">
-      Edit Status Titik
-    </h2>
-  </div>
+<SaveProject
+  open={openModal === "save"}
+  onOpenChange={(v:any) => !v && setOpenModal(null)}
+  projectName={projectName}
+  setProjectName={setProjectName}
+  handleSave={handleSave}
+  saving={saving}
+  saved={saved}
+/>
 
-  {/* CONTENT */}
-  <div className="overflow-y-auto">
-  <div className="px-6 py-4">
-      <table className="w-full text-sm border">
-        <thead className="bg-gradient-to-r from-blue-800 to-blue-600 text-white sticky top-0 z-10">
-          <tr>
-            <th className="border p-2">Point</th>
-            <th className="border p-2">X1</th>
-            <th className="border p-2">Y1</th>
-            <th className="border p-2">Z1</th>
-            <th className="border p-2">X2</th>
-            <th className="border p-2">Y2</th>
-            <th className="border p-2">Z2</th>
-            <th className="border p-2">Status</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {editData.map((row, i) => (
-            <tr key={i} className="text-center">
-              <td className="border p-2">{row.point}</td>
-              <td className="border p-2">{row.x1?.toFixed(3)}</td>
-              <td className="border p-2">{row.y1?.toFixed(3)}</td>
-              <td className="border p-2">{row.z1?.toFixed(3)}</td>
-              <td className="border p-2">{row.x2?.toFixed(3)}</td>
-              <td className="border p-2">{row.y2?.toFixed(3)}</td>
-              <td className="border p-2">{row.z2?.toFixed(3)}</td>
-
-              <td className="border p-2">
-                <select
-                  value={row.status}
-                  onChange={(e) => {
-                    const updated = [...editData];
-                    updated[i].status = e.target.value;
-                    setEditData(updated);
-                  }}
-                  className="border p-1 rounded"
-                >
-                  <option value="sekutu">sekutu</option>
-                  <option value="uji">uji</option>
-                </select>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-
-    {/* FOOTER (GA IKUT SCROLL) */}
-    <div className="p-4 border-t flex justify-between bg-white">
-      <button
-        onClick={async () => {
-          const updated = editData.map((item) => {
-            if (item.status !== "sekutu") {
-              const { selected, ...rest } = item;
-              return rest;
-            }
-            return item;
-          });
-
-          await handleRecalculate(updated);
-
-          alert("Recalculate berhasil");
-          setOpenModal(null);
-        }}
-        className="px-4 py-2 bg-emerald-700 text-white rounded hover:bg-emerald-800 transition"
-      >
-        Recalculate
-      </button>
-
-      <button
-        onClick={() => setOpenModal(null)}
-        className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 transition"
-      >
-        Batal
-      </button>
-    </div>
-  </div>
-  </div>
+<DataSnooping
+  open={openModal === "snooping"}
+  onOpenChange={(v:any) => !v && setOpenModal(null)}
+  snoopRows={snoopRows}
+  rawData={data?.pre?.allData}
+  handleRecalculate={handleRecalculate}
+/>
 </div>
-)}
-
-  {/* ================= GLOBAL MODAL ================= */}
-  {openModal === "global" && (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[9999]">
-      <div className="bg-white rounded-xl p-6 w-[400px] shadow-lg">
-
-        <h2 className="text-lg font-semibold mb-4">
-          Detail Uji Global
-        </h2>
-
-        <div className="space-y-3 text-sm">
-          <div>
-            Hasil:{" "}
-            <span
-              className={`font-semibold ${
-                data?.test?.global?.result === 1
-                  ? "text-green-600"
-                  : "text-red-600"
-              }`}
-            >
-              {data?.test?.global?.result === 1
-                ? "Memenuhi"
-                : "Tidak Memenuhi"}
-            </span>
-          </div>
-
-          <div>
-            Aposteriori:{" "}
-            <span className="font-medium">
-              {data?.test?.global?.aposteriori?.toFixed(6)}
-            </span>
-          </div>
-
-          <div>
-            X hitung:{" "}
-            <span className="font-medium">
-              {data?.test?.global?.Xhitung?.toFixed(6)}
-            </span>
-          </div>
-
-          <div>
-            X tabel:{" "}
-            <span className="font-medium">
-              {data?.test?.global?.Xtabel?.toFixed(6)}
-            </span>
-          </div>
-        </div>
-
-        <div className="flex justify-end mt-4">
-          <button
-            onClick={() => setOpenModal(null)}
-            className="px-4 py-2 bg-blue-900 text-white rounded hover:bg-blue-800"
-          >
-            Tutup
-          </button>
-        </div>
-      </div>
-    </div>
-  )}
-
-  {/* ================= SNOOPING MODAL ================= */}
-  {openModal === "snooping" && (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[9999]">
-      <div className="bg-white rounded-xl p-6 w-[1000px] shadow-lg max-h-[80vh] overflow-auto">
-
-        <h2 className="text-lg font-semibold mb-4">
-          Detail Data Snooping
-        </h2>
-
-        <div className="flex gap-2 mb-3">
-          <button
-            onClick={() => setSelectedPoints(pointList)}
-            className="px-3 py-1 bg-gray-200 rounded"
-          >
-            Select All
-          </button>
-
-          <button
-            onClick={() => setSelectedPoints([])}
-            className="px-3 py-1 bg-gray-200 rounded"
-          >
-            Clear
-          </button>
-        </div>
-
-        <table className="w-full text-sm border border-gray-300">
-          <thead className="bg-gray-200">
-            <tr>
-              <th className="border p-2">Use</th>
-              <th className="border p-2">Point</th>
-              <th className="border p-2">Vx</th>
-              <th className="border p-2">Svx</th>
-              <th className="border p-2">Status</th>
-              <th className="border p-2">Vy</th>
-              <th className="border p-2">Svy</th>
-              <th className="border p-2">Status</th>
-              <th className="border p-2">Vz</th>
-              <th className="border p-2">Svz</th>
-              <th className="border p-2">Status</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {snoopRows.map((row: any, i: number) => (
-              <tr key={i} className="text-center">
-                <td className="border p-2">
-                  <input
-                    type="checkbox"
-                    checked={selectedPoints.includes(row.no)}
-                    onChange={() => togglePoint(row.no)}
-                  />
-                </td>
-
-                <td className="border p-2">{row.no}</td>
-
-                <td className="border p-2">
-                  {selectedPoints.includes(row.no)
-                    ? row.vx?.toFixed(4)
-                    : "-"}
-                </td>
-
-                <td className="border p-2">
-                  {selectedPoints.includes(row.no)
-                    ? row.svx?.toFixed(4)
-                    : "-"}
-                </td>
-
-                <td className="border p-2">
-                  {selectedPoints.includes(row.no)
-                    ? row.statusX === 1
-                      ? "✔"
-                      : "✖"
-                    : "-"}
-                </td>
-
-                <td className="border p-2">
-                  {selectedPoints.includes(row.no)
-                    ? row.vy?.toFixed(4)
-                    : "-"}
-                </td>
-
-                <td className="border p-2">
-                  {selectedPoints.includes(row.no)
-                    ? row.svy?.toFixed(4)
-                    : "-"}
-                </td>
-
-                <td className="border p-2">
-                  {selectedPoints.includes(row.no)
-                    ? row.statusY === 1
-                      ? "✔"
-                      : "✖"
-                    : "-"}
-                </td>
-
-                <td className="border p-2">
-                  {selectedPoints.includes(row.no)
-                    ? row.vz?.toFixed(4)
-                    : "-"}
-                </td>
-
-                <td className="border p-2">
-                  {selectedPoints.includes(row.no)
-                    ? row.svz?.toFixed(4)
-                    : "-"}
-                </td>
-
-                <td className="border p-2">
-                  {selectedPoints.includes(row.no)
-                    ? row.statusZ === 1
-                      ? "✔"
-                      : "✖"
-                    : "-"}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-
-        <div className="flex justify-between mt-4">
-          <button
-            onClick={async () => {
-    try {
-      const raw = JSON.parse(localStorage.getItem("rawInput") || "[]");
-
-      const updated = raw.map((item: any) => {
-        if (item.status !== "sekutu") return item;
-
-        if (selectedPoints.includes(item.point)) {
-          return { ...item, selected: "selected" };
-        } else {
-          const { selected, ...rest } = item;
-          return rest;
-        }
-      });
-
-      await handleRecalculate(updated);
-
-      alert("Recalculate berhasil");
-    } catch (err) {
-      console.error(err);
-      alert("Gagal");
-    }
-  }}
-            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-500"
-          >
-            Recalculate
-          </button>
-
-          <button
-            onClick={() => setOpenModal(null)}
-            className="px-4 py-2 bg-blue-900 text-white rounded hover:bg-blue-800"
-          >
-            Tutup
-          </button>
-        </div>
-      </div>
-    </div>
-  )}
-  {openModal === "rmse" && (
-  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[9999]">
-    <div className="bg-white rounded-xl p-6 w-[700px] shadow-lg">
-
-      <h2 className="text-lg font-semibold mb-4">
-        Hasil Pengujian Titik Uji
-      </h2>
-
-      {data?.test?.rmse?.rmse3D === null ? (
-        <div className="text-center text-gray-500">
-          Anda tidak mendefinisikan titik uji
-        </div>
-      ) : (
-        <div className="space-y-2 text-sm">
-          <div>RMSE X: {data?.test?.rmse?.rmseX.toFixed(6)} m</div>
-          <div>RMSE Y: {data?.test?.rmse?.rmseY.toFixed(6)} m</div>
-          <div>RMSE Z: {data?.test?.rmse?.rmseZ.toFixed(6)} m</div>
-          <div className="font-semibold">
-            RMSE 3D: {data?.test?.rmse?.rmse3D.toFixed(6)} m
-          </div>
-        </div>
-      )}
-
-      <div className="flex justify-end mt-4">
-        <button
-          onClick={() => setOpenModal(null)}
-          className="px-4 py-2 bg-blue-900 text-white rounded"
-        >
-          Tutup
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-  {/* ================= SAVE MODAL ================= */}
-  {openModal === "save" && (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[9999]">
-      <div className="bg-white p-6 rounded-2xl w-96 shadow-xl">
-
-        <h2 className="text-lg font-semibold mb-4">
-          Simpan Project
-        </h2>
-
-        <input
-          type="text"
-          placeholder="Nama project (opsional)"
-          value={projectName}
-          onChange={(e) => setProjectName(e.target.value)}
-          className="w-full p-2 border rounded mb-4"
-          disabled={saving || saved}
-        />
-
-        <div className="flex justify-end gap-2">
-
-          <button
-            onClick={() => setOpenModal(null)}
-            className="px-4 py-2 bg-gray-300 rounded"
-            disabled={saving}
-          >
-            Batal
-          </button>
-
-          <button
-            onClick={handleSave}
-            disabled={saving || saved}
-            className={`px-4 py-2 text-white rounded ${
-              saved
-                ? "bg-green-400"
-                : saving
-                ? "bg-gray-400"
-                : "bg-green-600 hover:bg-green-500"
-            }`}
-          >
-            {saved ? (
-              "✓ Tersimpan"
-            ) : saving ? (
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                Menyimpan...
-              </div>
-            ) : (
-              "Simpan"
-            )}
-          </button>
-
-        </div>
-      </div>
-    </div>
-  )}
-</>
-    </div>
-  );
-}
+)};

@@ -85,12 +85,17 @@ export default function ParameterSayaPage() {
           avgX: project.rawData.avgX,
           avgY: project.rawData.avgY,
           avgZ: project.rawData.avgZ,
+          titikSekutu: project.rawData.titikSekutu,
+          titikUji: project.rawData.titikUji,
         },
         metode: project.metode,
       })
     );
     localStorage.setItem(
-      "metode",project.metode)
+      "metode",project.metode);
+    localStorage.setItem(
+      "rawInput", JSON.stringify(project.rawData.rawData)
+    );
     router.push("/hitung_parameter/analysis");
   };
   const handleCompare = () => {

@@ -112,9 +112,6 @@ function getEllipseParams(
 
   const theta =
     0.5 * Math.atan2(2 * covXY, varX - varY);
-console.log({
-  a,b,theta, term1, term2, sigmaU2, sigmaV2
-});
   return {
     radiusX: a,
     radiusY: b,
@@ -129,7 +126,6 @@ function EllipseLayer({ data, scale, getColor }: any) {
   const map = useMap();
 
   useEffect(() => {
-    console.log("ellipse fn:", (L as any).ellipse);
     if (!data.length) return;
 
     const layers: L.Layer[] = [];

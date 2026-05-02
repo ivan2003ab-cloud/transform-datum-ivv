@@ -52,8 +52,6 @@ export function bwMatrix(data, metode) {
   const P_m = P.length
     ? math.diag(P)
     : math.identity(dataSekutu.length * 3);
-
-    console.log("SEKUTU FINAL:", dataSekutu);
   return {
     A: A_m.toArray(),
     F: F_m.toArray(),

@@ -49,7 +49,7 @@ function ResidualChart({ raw, v, rmse }: any) {
   const data = mode === "sekutu" ? buildSekutu() : buildUji();
 
   return (
-    <div className="h-full w-full bg-white mt-12 p-2">
+    <div className="h-full w-full bg-white p-3 pt-10">
       {/* TOGGLE */}
       <div className="flex justify-center mb-3">
   <div className="flex items-center gap-2 text-sm font-semibold">
@@ -67,7 +67,7 @@ function ResidualChart({ raw, v, rmse }: any) {
   </div>
 </div>
 
-      <ResponsiveContainer width="100%" height={250}>
+      <ResponsiveContainer width="100%" height="80%">
         <BarChart data={data}>
           <CartesianGrid strokeDasharray="3 3" />
 
