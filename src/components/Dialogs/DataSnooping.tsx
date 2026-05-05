@@ -25,6 +25,7 @@ export default function SnoopingDialog({
   snoopRows,
   rawData,
   handleRecalculate,
+  fTabel
 }: any) {
 
   const renderStatus = (val: number, active: boolean) =>
@@ -153,12 +154,19 @@ export default function SnoopingDialog({
           </table>
         </div>
 
-        <DialogFooter className="px-6 py-4 border-t">
+        <DialogFooter className="px-6 py-3 border-t flex items-center">
+          <div className="flex items-center gap-5 text-sm">
+            <span className="flex items-center gap-2">
+              <span>Nilai Tabel Fisher: {typeof fTabel === "number" ? fTabel.toFixed(3) : "-"}</span>
+            </span>
+          </div>
+          <div className="ml-auto flex gap-2">
           <DialogClose asChild>
             <Button variant="outline">Tutup</Button>
           </DialogClose>
+          </div>
         </DialogFooter>
-
+          
       </DialogContent>
     </Dialog>
   );

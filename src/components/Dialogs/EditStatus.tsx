@@ -20,22 +20,70 @@ export default function EditStatus({
   handleRecalculate,
 }: any) {
   const [loading, setLoading] = useState(false);
+  const [confidence, setConfidence] = useState(1);
 
+  // =========================
+  // 📊 STATISTIK
+  // =========================
+  const getStats = () => {
+    if (!editData || editData.length === 0) {
+      return {
+        meanDx: 0,
+        meanDy: 0,
+        meanDz: 0,
+        stdDx: 0,
+        stdDy: 0,
+        stdDz: 0,
+      };
+    }
+
+    const dx = editData.map((r: any) => (r.x2 ?? 0) - (r.x1 ?? 0));
+    const dy = editData.map((r: any) => (r.y2 ?? 0) - (r.y1 ?? 0));
+    const dz = editData.map((r: any) => (r.z2 ?? 0) - (r.z1 ?? 0));
+
+    const mean = (arr: number[]) =>
+      arr.reduce((a, b) => a + b, 0) / arr.length;
+
+    const std = (arr: number[]) => {
+      const m = mean(arr);
+      return Math.sqrt(
+        arr.reduce((sum, val) => sum + Math.pow(val - m, 2), 0) /
+          arr.length
+      );
+    };
+
+    return {
+      meanDx: mean(dx),
+      meanDy: mean(dy),
+      meanDz: mean(dz),
+      stdDx: std(dx),
+      stdDy: std(dy),
+      stdDz: std(dz),
+    };
+  };
+
+  const stats = getStats();
+
+  // =========================
+  // 🎯 COLOR LOGIC
+  // =========================
+  const getColor = (val: number, mean: number, std: number) => {
+    if (std === 0) return "bg-gray-100";
+    return Math.abs(val - mean) <= confidence * std
+      ? "bg-green-100 text-green-700"
+      : "bg-red-100 text-red-700 font-semibold";
+  };
+
+  // =========================
+  // 🚀 SUBMIT
+  // =========================
   const onSubmit = async () => {
     setLoading(true);
     try {
-      const updated = editData.map((item: any) => {
-        if (item.status !== "sekutu") {
-          const { selected, ...rest } = item;
-          return rest;
-        }
-        return item;
-      });
-
-      await handleRecalculate(updated);
+      await handleRecalculate(editData);
     } catch (err) {
       console.error(err);
-      alert("Recalculation gagal. Coba lagi.");
+      alert("Recalculation gagal.");
     } finally {
       setLoading(false);
     }
@@ -43,103 +91,176 @@ export default function EditStatus({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="!w-[80vw] !max-w-[1000px] p-0">
+      <DialogContent className="!w-[80vw] !max-w-[800px] p-0">
 
         {/* HEADER */}
         <DialogHeader className="px-6 py-4 border-b">
-          <DialogTitle className="text-lg">
-            Edit Status Titik
-          </DialogTitle>
+          <DialogTitle>Edit Status Titik</DialogTitle>
         </DialogHeader>
 
         {/* CONTENT */}
-        <div className="h-[70vh] overflow-y-auto px-6 py-4">
+        <div className="px-6 py-1 space-y-4">
 
-          <table className="w-full text-[13px] border border-gray-300">
+          {/* CONFIDENCE */}
+          <div className="flex items-center gap-3 mb-4">
+            <span className="text-sm font-medium">
+              Tingkat kepercayaan:
+            </span>
+            <select
+              value={confidence}
+              onChange={(e) => setConfidence(Number(e.target.value))}
+              className="border px-2 py-1 rounded"
+            >
+              <option value={1}>68% (1σ)</option>
+              <option value={2}>95% (2σ)</option>
+              <option value={3}>99% (3σ)</option>
+            </select>
+          </div>
 
-            <thead className="bg-gradient-to-r from-blue-800 to-blue-600 text-white sticky top-0 z-10">
-              <tr>
-                <th className="p-3 border text-center">Point</th>
-                <th className="p-3 border text-center">X1</th>
-                <th className="p-3 border text-center">Y1</th>
-                <th className="p-3 border text-center">Z1</th>
-                <th className="p-3 border text-center">X2</th>
-                <th className="p-3 border text-center">Y2</th>
-                <th className="p-3 border text-center">Z2</th>
-                <th className="p-3 border text-center">Status</th>
-              </tr>
-            </thead>
+          {/* TABLE HEADER (FIXED) */}
+          <div className="h-[45vh] overflow-y-auto border rounded-lg">
 
-            <tbody>
-              {editData.map((row: any, i: number) => (
-                <tr
-                  key={i}
-                  className="hover:bg-gray-50 transition"
-                >
-                  <td className="p-3 border font-medium text-center">
-                    {row.point}
-                  </td>
+  <table className="w-full table-fixed text-sm border-collapse">
 
-                  <td className="p-3 border text-center">
-                    {row.x1?.toFixed(3)}
-                  </td>
-                  <td className="p-3 border text-center">
-                    {row.y1?.toFixed(3)}
-                  </td>
-                  <td className="p-3 border text-center">
-                    {row.z1?.toFixed(3)}
-                  </td>
+    {/*FIX LEBAR KOLOM */}
+    <colgroup>
+      <col className="w-[20%]" />
+      <col className="w-[20%]" />
+      <col className="w-[20%]" />
+      <col className="w-[20%]" />
+      <col className="w-[20%]" />
+    </colgroup>
 
-                  <td className="p-3 border text-center">
-                    {row.x2?.toFixed(3)}
-                  </td>
-                  <td className="p-3 border text-center">
-                    {row.y2?.toFixed(3)}
-                  </td>
-                  <td className="p-3 border text-center">
-                    {row.z2?.toFixed(3)}
-                  </td>
+    {/* HEADER */}
+    <thead className="bg-slate-800 text-white sticky top-0">
+      <tr>
+        <th className="p-2 text-center">Point</th>
+        <th className="p-2 text-center">ΔX</th>
+        <th className="p-2 text-center">ΔY</th>
+        <th className="p-2 text-center">ΔZ</th>
+        <th className="p-2 text-center">Status</th>
+      </tr>
+    </thead>
 
-                  <td className="p-3 border text-center">
-                    <select
-                      value={row.status}
-                      onChange={(e) => {
-                        const updated = [...editData];
-                        updated[i].status = e.target.value;
-                        setEditData(updated);
-                      }}
-                      className="border rounded px-2 py-1 text-sm"
-                      disabled={loading}
-                    >
-                      <option value="sekutu">sekutu</option>
-                      <option value="uji">uji</option>
-                    </select>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+    {/* BODY */}
+    <tbody>
+      {editData.map((row: any, i: number) => {
+        const dx = (row.x2 ?? 0) - (row.x1 ?? 0);
+        const dy = (row.y2 ?? 0) - (row.y1 ?? 0);
+        const dz = (row.z2 ?? 0) - (row.z1 ?? 0);
+
+        return (
+          <tr key={i} className={i % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+
+            <td className="p-2 text-center border">{row.point}</td>
+
+            <td className={`p-2 text-center border ${getColor(dx, stats.meanDx, stats.stdDx)}`}>
+              {dx.toFixed(3)}
+            </td>
+
+            <td className={`p-2 text-center border ${getColor(dy, stats.meanDy, stats.stdDy)}`}>
+              {dy.toFixed(3)}
+            </td>
+
+            <td className={`p-2 text-center border ${getColor(dz, stats.meanDz, stats.stdDz)}`}>
+              {dz.toFixed(3)}
+            </td>
+
+            <td className="p-2 text-center border">
+              <select
+                value={row.status}
+                onChange={(e) => {
+                  const updated = [...editData];
+                  updated[i].status = e.target.value;
+                  setEditData(updated);
+                }}
+                className="border rounded px-2 py-1 text-sm"
+              >
+                <option value="sekutu">sekutu</option>
+                <option value="uji">uji</option>
+              </select>
+            </td>
+
+          </tr>
+        );
+      })}
+    </tbody>
+
+  </table>
+</div>
+
+          {/* FOOTER FIXED */}
+          <div className="mt-2 border rounded-lg overflow-hidden text-sm">
+
+  <table className="w-full table-fixed border-collapse">
+
+    <colgroup>
+      <col className="w-[20%]" />
+      <col className="w-[20%]" />
+      <col className="w-[20%]" />
+      <col className="w-[20%]" />
+      <col className="w-[20%]" />
+    </colgroup>
+
+    <tbody className="bg-gray-100 font-semibold">
+
+      <tr>
+        <td className="p-2 text-center border">Rata-rata</td>
+        <td className="p-2 text-center border">{stats.meanDx.toFixed(3)}</td>
+        <td className="p-2 text-center border">{stats.meanDy.toFixed(3)}</td>
+        <td className="p-2 text-center border">{stats.meanDz.toFixed(3)}</td>
+        <td className="border"></td>
+      </tr>
+
+      <tr>
+        <td className="p-2 text-center border">Simpangan Baku</td>
+        <td className="p-2 text-center border">{stats.stdDx.toFixed(3)}</td>
+        <td className="p-2 text-center border">{stats.stdDy.toFixed(3)}</td>
+        <td className="p-2 text-center border">{stats.stdDz.toFixed(3)}</td>
+        <td className="border"></td>
+      </tr>
+
+    </tbody>
+
+  </table>
+</div>
+
         </div>
 
-        {/* FOOTER */}
-        <DialogFooter className="px-6 py-4 border-t flex justify-between">
+        {/* FOOTER BUTTON */}
+        <DialogFooter className="px-6 py-3 border-t flex items-center">
 
-          <Button
-            onClick={onSubmit}
-            disabled={loading}
-            className="bg-emerald-700 hover:bg-emerald-800 flex items-center gap-2"
-          >
-            {loading && <Spinner data-icon="inline-start" />}
-            {loading ? "Processing..." : "Recalculate"}
-          </Button>
+          {/* LEGEND */}
+          <div className="flex items-center gap-5 text-sm">
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 bg-green-100 border border-green-400 rounded"></div>
+              <span>Memenuhi (±{confidence}σ)</span>
+            </div>
 
-          <DialogClose asChild>
-            <Button variant="outline" disabled={loading}>
-              Tutup
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 bg-red-100 border border-red-400 rounded"></div>
+              <span>Tidak memenuhi</span>
+            </div>
+          </div>
+
+          {/* BUTTON */}
+          <div className="ml-auto flex gap-2">
+            <Button
+              onClick={onSubmit}
+              disabled={loading}
+              className="bg-emerald-700 hover:bg-emerald-800 flex items-center gap-2"
+            >
+              {loading && <Spinner />}
+              {loading ? "Processing..." : "Recalculate"}
             </Button>
-          </DialogClose>
+
+            <DialogClose asChild>
+              <Button variant="outline">Tutup</Button>
+            </DialogClose>
+          </div>
 
         </DialogFooter>
+
       </DialogContent>
     </Dialog>
   );

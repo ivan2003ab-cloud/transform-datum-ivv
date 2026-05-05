@@ -14,7 +14,7 @@ export function hitungPerataan(A, F, P) {
   const minQ = math.multiply(-1, Q);
   const range = math.multiply(AT, Pm, Fm);
   const params = math.multiply(minQ, range);
-
+  console.log("params:", params.toArray());
   return {
     params: params.toArray(),
     Q: Q.toArray(),

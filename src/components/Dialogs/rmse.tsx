@@ -21,11 +21,11 @@ export default function rmse({ open, onOpenChange, data }: any) {
           </div>
         ) : (
           <div className="space-y-2 text-sm">
-            <div>RMSE X: {data?.test?.rmse?.rmseX.toFixed(6)} m</div>
-            <div>RMSE Y: {data?.test?.rmse?.rmseY.toFixed(6)} m</div>
-            <div>RMSE Z: {data?.test?.rmse?.rmseZ.toFixed(6)} m</div>
+            <div>RMSE X: {data?.test?.rmse?.rmseX.toFixed(4)} m</div>
+            <div>RMSE Y: {data?.test?.rmse?.rmseY.toFixed(4)} m</div>
+            <div>RMSE Z: {data?.test?.rmse?.rmseZ.toFixed(4)} m</div>
             <div className="font-semibold">
-              RMSE 3D: {data?.test?.rmse?.rmse3D.toFixed(6)} m
+              RMSE 3D: {data?.test?.rmse?.rmse3D.toFixed(4)} m
             </div>
           </div>
         )}

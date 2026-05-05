@@ -168,7 +168,7 @@ useEffect(() => {
     alert("Minimal diperlukan 3 titik sekutu aktif.");
     return;
   }
-    localStorage.setItem("rawInput", JSON.stringify(rawData));
+   localStorage.setItem("rawInput", JSON.stringify(rawData));
 
   const result = await runAdjustment(rawData, metode!);
 
@@ -279,6 +279,7 @@ useEffect(() => {
             vVar: data?.adj?.vVar,
             std: data?.test?.snoop?.sqrtDiag,
             result: data?.test?.snoop?.result,
+            fTabel: data?.test?.snoop?.fTabel,
           },
 
           parameter: {
@@ -539,6 +540,7 @@ useEffect(() => {
   snoopRows={snoopRows}
   rawData={data?.pre?.allData}
   handleRecalculate={handleRecalculate}
+  fTabel={data?.test?.snoop?.fTabel}
 />
 </div>
 )};

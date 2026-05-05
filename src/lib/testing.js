@@ -145,6 +145,5 @@ export function hitungRMSETitikUji(
     rmseY,
     rmseZ,
     rmse3D,
-    message: "Perhitungan RMSE berhasil",
   };
 }

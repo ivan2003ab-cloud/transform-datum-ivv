@@ -161,6 +161,51 @@ export default function BandingkanPage() {
     <td colSpan={3}>{snoop1.no}</td>
     <td colSpan={3}>{snoop2.no}</td>
   </tr>
+  {/* RMSE*/}
+  <tr className="bg-blue-50 text-blue-700 font-semibold">
+    <td>RMSE</td>
+    <td colSpan={6}></td>
+  </tr>
+
+  <tr>
+    <td>Jumlah Titik Uji</td>
+ <td colSpan={3}>
+    {
+      (p1.rawData?.rawData || []).filter(
+        (d: any) => d.status?.toLowerCase().trim() === "uji"
+      ).length
+    }
+  </td>
+  <td colSpan={3}>
+    {
+      (p2.rawData?.rawData || []).filter(
+        (d: any) => d.status?.toLowerCase().trim() === "uji"
+      ).length
+    }
+  </td>
+  </tr>
+
+  <tr>
+    <td>RMSE X</td>
+    <td colSpan={3}>{p1.rmse.rmseX?.toFixed(4)}</td>
+    <td colSpan={3}>{p2.rmse.rmseX?.toFixed(4)}</td>
+  </tr>
+  <tr>
+    <td>RMSE Y</td>
+    <td colSpan={3}>{p1.rmse.rmseY?.toFixed(4)}</td>
+    <td colSpan={3}>{p2.rmse.rmseY?.toFixed(4)}</td>
+  </tr>
+  <tr>
+    <td>RMSE Z</td>
+    <td colSpan={3}>{p1.rmse.rmseZ?.toFixed(4)}</td>
+    <td colSpan={3}>{p2.rmse.rmseZ?.toFixed(4)}</td>
+  </tr>
+  <tr>
+    <td>RMSE 3D</td>
+    <td colSpan={3}>{p1.rmse.rmse3D?.toFixed(4)}</td>
+    <td colSpan={3}>{p2.rmse.rmse3D?.toFixed(4)}</td>
+  </tr>
+
 
   {/* PARAMETER HEADER */}
   <tr className="bg-emerald-50 text-emerald-700 font-semibold">
