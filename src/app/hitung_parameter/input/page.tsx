@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import * as XLSX from "xlsx";
 import { normalizeToCartesian } from "@/lib/coordinateConverter";
 import { runAdjustment } from "@/lib/runAdjustment";
-import { Upload } from "lucide-react";
+import { Upload, CircleHelp } from "lucide-react";
+import { startInputGuide } from "@/components/Guide/inputguide";
 
 const MapParamInput = dynamic(
   () => import("@/components/Map/mapParamInput"),
@@ -23,6 +24,25 @@ export default function InputPage() {
   const [loading, setLoading] = useState(false);
   const [parsing, setParsing] = useState(false);
   const [showTemplatePopup, setShowTemplatePopup] = useState(false);
+  useEffect(() => {
+  const alreadySeen = localStorage.getItem(
+    "guide-input-page"
+  );
+
+  if (!alreadySeen) {
+    setTimeout(() => {
+      startInputGuide();
+    }, 500);
+
+    localStorage.setItem(
+      "guide-input-page",
+      "true"
+    );
+  }
+}, []);
+
+  const animatedButton =
+  "transition-all duration-300 ease-out hover:-translate-y-0.5 hover:scale-105 hover:shadow-lg active:scale-95";
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -186,7 +206,7 @@ export default function InputPage() {
 
   return (
     <div className="p-6 space-y-4">
-      <div className="rounded-3xl h-[300px] overflow-hidden border border-gray-200">
+      <div id="map-preview" className="rounded-3xl h-[300px] overflow-hidden border border-gray-200">
         {parsing ? (
           <div className="flex items-center justify-center h-full text-gray-400">
             Memuat data...
@@ -206,14 +226,14 @@ export default function InputPage() {
         </span>
 
         <div className="flex gap-3">
-          <button
+          <button id="template-button"
             onClick={() => setShowTemplatePopup(true)}
-            className="px-6 py-2 rounded-full bg-gradient-to-r from-blue-600 to-blue-400 text-white hover:opacity-90"
+            className={`px-6 py-2 ${animatedButton} rounded-full bg-gradient-to-r from-blue-600 to-blue-400 text-white hover:opacity-90`}
           >
             Template
           </button>
 
-          <label className="px-6 py-2 flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-800 to-emerald-600 text-white hover:opacity-90 cursor-pointer">
+          <label id="upload-label" className={`px-6 py-2 ${animatedButton} flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-800 to-emerald-600 text-white hover:opacity-90 cursor-pointer`}>
             <Upload size={16} />
             Upload
             <input
@@ -231,7 +251,7 @@ export default function InputPage() {
         </div>
       )}
 
-      <div>
+      <div id="opsi-struktur">
         <h2 className="font-semibold text-lg mb-3 text-blue-900">
           Struktur data
         </h2>
@@ -250,7 +270,7 @@ export default function InputPage() {
         </div>
       </div>
 
-      <div>
+      <div id="opsi-metode">
         <h2 className="font-semibold text-lg mb-3 text-blue-900">
           Metode Perataan
         </h2>
@@ -269,11 +289,29 @@ export default function InputPage() {
         </div>
       </div>
 
-      <div className="flex justify-end">
+      <div className="flex justify-between items-center">
         <button
+  onClick={startInputGuide}
+  className={`
+    px-6 py-3 rounded-xl
+    bg-gradient-to-r
+    from-blue-600
+    to-cyan-400
+    text-white font-semibold
+
+    flex items-center gap-2
+
+    ${animatedButton}
+  `}
+>
+  <CircleHelp size={18} />
+  Bantuan
+</button>
+        <button
+          id ="proses-button"
           onClick={handleProses}
           disabled={loading}
-          className="px-8 py-3 rounded-xl bg-gradient-to-r from-emerald-800 to-emerald-600 text-white font-semibold hover:opacity-90 disabled:bg-gray-400"
+          className={`px-8 py-3 rounded-xl ${animatedButton} bg-gradient-to-r from-emerald-800 to-emerald-600 text-white font-semibold hover:opacity-90 disabled:bg-gray-400`} 
         >
           {loading ? "Memproses..." : "Proses"}
         </button>
@@ -289,14 +327,14 @@ export default function InputPage() {
             <div className="flex flex-col gap-3">
               <button
                 onClick={() => downloadTemplate("cartesian")}
-                className="px-4 py-2 rounded-lg bg-gradient-to-r from-blue-800 to-blue-600 text-white hover:opacity-90"
+                className={`px-4 py-2 ${animatedButton} rounded-lg bg-gradient-to-r from-blue-800 to-blue-600 text-white hover:opacity-90`}
               >
                 Cartesian (XYZ)
               </button>
 
               <button
                 onClick={() => downloadTemplate("dd")}
-                className="px-4 py-2 rounded-lg bg-gradient-to-r from-blue-800 to-blue-600 text-white hover:opacity-90"
+                className={`px-4 py-2 ${animatedButton} rounded-lg bg-gradient-to-r from-blue-800 to-blue-600 text-white hover:opacity-90`}
               >
                 Geodetik (Degree)
               </button>
@@ -304,7 +342,7 @@ export default function InputPage() {
 
             <button
               onClick={() => setShowTemplatePopup(false)}
-              className="text-sm text-gray-500 hover:underline"
+              className={`text-sm ${animatedButton} text-gray-500 hover:underline`}
             >
               Batal
             </button>

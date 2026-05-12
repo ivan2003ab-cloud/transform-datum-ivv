@@ -1,0 +1,47 @@
+.driver-popover {
+  border-radius: 18px !important;
+  border: 1px solid #dbeafe !important;
+
+  background: #ffffff !important;
+
+  box-shadow:
+    0 10px 25px rgba(37, 99, 235, 0.12) !important;
+}
+
+/* title */
+.driver-popover-title {
+  color: #2563eb !important;
+  font-weight: 700 !important;
+}
+
+/* desc */
+.driver-popover-description {
+  color: #64748b !important;
+  line-height: 1.6 !important;
+}
+
+/* next */
+.driver-popover-next-btn {
+  background: linear-gradient(
+    to right,
+    #2563eb,
+    #38bdf8
+  ) !important;
+
+  color: white !important;
+
+  border: none !important;
+  border-radius: 10px !important;
+
+  text-shadow: none !important;
+}
+
+/* prev */
+.driver-popover-prev-btn {
+  border-radius: 10px !important;
+}
+
+/* overlay */
+.driver-overlay {
+  background: rgba(0, 0, 0, 0.45) !important;
+}

@@ -12,7 +12,8 @@ import RmseDialog from "@/components/Dialogs/rmse";
 import EditStatus from "@/components/Dialogs/EditStatus";
 import SaveProject from "@/components/Dialogs/SaveProject";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Pencil, Save } from "lucide-react";
+import { Pencil, Save, CircleHelp } from "lucide-react";
+import { startAnalysisGuide } from "@/components/Guide/analysisguide";
 
 const MapParamAnalysis = dynamic(
   () => import("@/components/Map/mapParamAnalysis"),
@@ -30,6 +31,22 @@ export default function AnalysisPage() {
   const [editData, setEditData] = useState<any[]>([]);
   const [jumlahSekutu, setJumlahSekutu] = useState(0);
   const [jumlahUji, setJumlahUji] = useState(0);
+  useEffect(() => {
+  const alreadySeen = localStorage.getItem(
+    "guide-analysis-page"
+  );
+
+  if (!alreadySeen) {
+    setTimeout(() => {
+      startAnalysisGuide();
+    }, 700);
+
+    localStorage.setItem(
+      "guide-analysis-page",
+      "true"
+    );
+  }
+}, []);
 
 useEffect(() => {
   const stored = localStorage.getItem("hasil");
@@ -319,8 +336,8 @@ useEffect(() => {
     <Tabs defaultValue="map" className="w-full">
 
   {/* TAB SWITCH */}
-  <div className="w-full flex justify-center">
-    <TabsList className="bg-white border rounded-xl p-1 shadow">
+  <div  className="w-full flex justify-center">
+    <TabsList id="tampilan-residu" className="bg-white border rounded-xl p-1 shadow">
       <TabsTrigger value="map" className="
     px-4 py-1 rounded-lg transition
     data-[state=active]:bg-gradient-to-r
@@ -339,7 +356,7 @@ useEffect(() => {
   </div>
 
   {/* CONTENT WRAPPER */}
-  <div className="relative w-full h-[45vh] min-h-[300px] max-h-[500px] rounded-3xl border border-gray-200 overflow-hidden">
+  <div id="content-wrapper" className="relative w-full h-[45vh] min-h-[300px] max-h-[500px] rounded-3xl border border-gray-200 overflow-hidden">
 
     <TabsContent value="map" className="h-full mt-0">
       <MapParamAnalysis data={buildMapData()} />
@@ -357,7 +374,7 @@ useEffect(() => {
 
 </Tabs>
     <div className="flex items-center justify-between mb-6">
-  <div className="flex gap-4">
+  <div id="jumlah-titik" className="flex gap-4">
     <div className="px-5 py-2 border border-blue-300 text-blue-600 rounded-xl text-sm font-medium bg-blue-50">
       Jumlah Titik Sekutu: {jumlahSekutu}
     </div>
@@ -367,6 +384,7 @@ useEffect(() => {
   </div>
 
   <button
+  id="edit-status-button"
   onClick={openEditStatus}
   className="
     px-6 py-2 flex items-center gap-2
@@ -382,9 +400,9 @@ useEffect(() => {
 </button>
 </div>
       {/* RESULT LIST */}
-      <div className="space-y-4">
+      <div id="hasil-pengujian" className="space-y-4">
         {/* Uji Global */}
-        <div className="flex items-center justify-between">
+        <div id="uji-global" className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <span className="font-semibold">Uji Global</span>
             <span
@@ -409,7 +427,7 @@ useEffect(() => {
         </div>
 
         {/* Data Snooping */}
-        <div className="flex items-center justify-between">
+        <div id="data-snooping" className="flex items-center justify-between">
           <span className="font-semibold">Data Snooping</span>
 
           <button
@@ -423,7 +441,7 @@ useEffect(() => {
         </div>
 
         {/* RMSE Titik Uji */}
-        <div className="flex items-center justify-between">
+        <div id="rmse-titik-uji" className="flex items-center justify-between">
           <span className="font-semibold">RMSE Titik Uji</span>
 
           <button
@@ -437,7 +455,7 @@ useEffect(() => {
         </div>
 
         {/* Hasil Transformasi */}
-        <div>
+        <div id="hasil-transformasi">
           <span className="font-semibold">Hasil Parameter Transformasi</span>
 
           <div className="mt-4 bg-gray-200 rounded-xl p-6">
@@ -479,19 +497,64 @@ useEffect(() => {
                 ))}
               </tbody>
             </table>
-          <div className="flex justify-between mt-4">
+          <div className="flex justify-between items-center mt-4">
+
+            <div className="flex gap-3">
+
+  {/* BANTUAN */}
+  <button
+    onClick={startAnalysisGuide}
+    className="
+      px-6 py-2 flex items-center gap-2
+      rounded-full
+
+      bg-gradient-to-r
+      from-blue-600
+      to-cyan-400
+
+      text-white
+
+      transition-all duration-200
+      hover:-translate-y-1
+      hover:scale-[1.03]
+      hover:shadow-lg
+      active:scale-[0.97]
+    "
+  >
+    <CircleHelp size={16} />
+    Bantuan
+  </button>
+
+  {/* SIMPAN */}
+  <button
+    id="save-project-button"
+    onClick={() => setOpenModal("save")}
+    className="
+      px-6 py-2 flex items-center gap-2
+      rounded-full
+
+      bg-gradient-to-r
+      from-emerald-600
+      to-emerald-500
+
+      text-white
+
+      transition-all duration-200
+      hover:-translate-y-1
+      hover:scale-[1.03]
+      hover:shadow-lg
+      active:scale-[0.97]
+    "
+  >
+    <Save size={16} />
+    Simpan
+  </button>
+
+</div>
+
 
             <button
-              onClick={() => setOpenModal("save")}
-              className="px-6 py-2 flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-600 to-emerald-500 text-white hover:bg-green-500 transition-all duration-200
-  hover:-translate-y-1 hover:scale-[1.03]
-  hover:shadow-lg active:scale-[0.97]"
-            >
-              <Save size={16} /> Simpan
-            </button>
-
-
-            <button
+              id="to-transform-button"
               onClick={handleToTransform}
               className="px-6 py-2 bg-gradient-to-r from-blue-900 to-blue-700 text-white rounded-xl hover:bg-blue-800 transition-all duration-200
   hover:-translate-y-1 hover:scale-[1.03]
