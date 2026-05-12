@@ -154,17 +154,50 @@ export default function SnoopingDialog({
           </table>
         </div>
 
-        <DialogFooter className="px-6 py-3 border-t flex items-center">
-          <div className="flex items-center gap-5 text-sm">
-            <span className="flex items-center gap-2">
-              <span>Nilai Tabel Fisher: {typeof fTabel === "number" ? fTabel.toFixed(3) : "-"}</span>
-            </span>
-          </div>
-          <div className="ml-auto flex gap-2">
-          <DialogClose asChild>
-            <Button variant="outline">Tutup</Button>
-          </DialogClose>
-          </div>
+        <DialogFooter className="px-6 py-4 border-t flex flex-col items-start gap-3">
+
+  {/* INFO */}
+  <div className="flex flex-col gap-2 text-sm text-gray-700 w-full">
+
+    {/* F TABLE */}
+    <div className="font-medium text-blue-900">
+      Nilai Tabel Fisher:{" "}
+      {typeof fTabel === "number"
+        ? fTabel.toFixed(3)
+        : "-"}
+    </div>
+
+    {/* STATUS */}
+    <div className="flex items-center gap-6">
+
+      <span className="flex items-center gap-2">
+        <Check className="w-4 h-4 text-green-600" />
+
+        Memenuhi uji Fisher
+      </span>
+
+      <span className="flex items-center gap-2">
+        <X className="w-4 h-4 text-red-600" />
+
+        Tidak memenuhi uji Fisher
+      </span>
+    </div>
+
+    {/* NOTE */}
+    <div className="text-gray-500 leading-relaxed">
+      Tidak memenuhi uji Fisher menunjukkan bahwa data kemungkinan mengandung kesalahan kasar. Pengguna dapat menghapus data tersebut dengan melakukan unselect pada titik terkait.
+    </div>
+  </div>
+
+  {/* BUTTON */}
+  <div className="flex justify-end">
+    <DialogClose asChild>
+      <Button variant="outline">
+        Tutup
+      </Button>
+    </DialogClose>
+  </div>
+  
         </DialogFooter>
           
       </DialogContent>
