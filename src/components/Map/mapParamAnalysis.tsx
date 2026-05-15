@@ -164,7 +164,7 @@ function EllipseLayer({ data, scale, getColor }: any) {
 // MAIN
 // =======================
 export default function MapParamAnalysis({ data }: { data: any[] }) {
-  const [scale, setScale] = useState(10000);
+  const [scale, setScale] = useState(100);
   const { breaks, colors, getColor } = createColorScale(data);
 
   return (
