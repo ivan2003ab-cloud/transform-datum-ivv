@@ -460,7 +460,7 @@ useEffect(() => {
           <span className="font-semibold">Hasil Parameter Transformasi</span>
 
           <div className="mt-4 bg-gray-200 rounded-xl p-3 md:p-6 overflow-x-auto">
-            <table className="min-w-[650px]w-full text-sm border border-gray-300">
+            <table className="min-w-[650px] w-full text-sm border border-gray-300">
               <thead className="bg-gray-300">
                 <tr>
                 <th className="border p-2">Parameter</th>
@@ -498,7 +498,9 @@ useEffect(() => {
                 ))}
               </tbody>
             </table>
-          <div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-center mt-4">
+          
+        </div>
+        <div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-center mt-4">
 
             <div className="flex justify-center md:justify-start gap-3">
 
@@ -573,7 +575,6 @@ useEffect(() => {
               </span>
             </button>
           </div>
-        </div>
       </div>
       </div>
 

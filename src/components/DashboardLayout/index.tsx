@@ -15,9 +15,15 @@ import {
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { motion } from "motion/react";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerTrigger,
+  DrawerTitle,
+} from "@/components/ui/drawer";
+
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden"; 
 
 export default function DashboardLayout({
   children,
@@ -81,136 +87,165 @@ export default function DashboardLayout({
       </div>
       {/* BODY */}
       <div className="flex flex-1 overflow-hidden">
-        <div className="md:hidden fixed inset-0 pointer-events-none z-50">
-          <motion.div
-    drag
-    dragMomentum={false}
-    dragElastic={0.05}
-    dragConstraints={{
-      left: -250,
-      right: 0,
-      top: -500,
-      bottom: 0,
-    }}
-    className="
-    absolute
-    top-24
-    right-5
-    pointer-events-auto
-    "
-  >
-  <Sheet>
-
-    <SheetTrigger asChild>
+        <div className="md:hidden
+  fixed
+  bottom-6
+  left-1/2
+  -translate-x-1/2
+  z-50">
+          <Drawer>
+    <DrawerTrigger asChild>
 
       <button
         className="
-        w-14 h-14
+        bg-white/90
+        backdrop-blur
+        shadow-lg
+        border
         rounded-full
-        shadow-xl
-        bg-gradient-to-r
-        from-blue-900
-        to-emerald-600
-        text-white
-        flex items-center
-        justify-center
-        "
+
+        px-5 py-2
+
+        flex
+        flex-col
+        items-center
+
+        active:scale-95
+      "
       >
-        <Menu size={22}/>
+        <ChevronUp
+          size={20}
+          className="text-gray-600"
+        />
+
+        <span className="
+        text-[10px]
+        text-gray-500
+        ">
+          Menu
+        </span>
+
       </button>
 
-    </SheetTrigger>
+    </DrawerTrigger>
+          <DrawerContent
+  className="
+  rounded-t-3xl
+  max-h-[75vh]
+"
+>
 
-    <SheetContent
-      side="bottom"
-      className="
-      rounded-t-3xl
-      h-auto
-      pb-8
-      "
-    >
-      <SheetHeader>
+  <VisuallyHidden>
+    <DrawerTitle>
+      Menu Dashboard
+    </DrawerTitle>
+  </VisuallyHidden>
 
-    <SheetTitle>
-      Menu
-    </SheetTitle>
+  <div className="p-6">
 
-  </SheetHeader>
-
-      {/* handle atas */}
+    {user && (
       <div className="
-      w-12 h-1
-      bg-gray-300
-      rounded-full
-      mx-auto
-      mb-6
-      " />
+      p-3
+      rounded-xl
+      bg-gray-100
+      mb-4
+      font-semibold
+      ">
+        Hi, {user.name}
+      </div>
+    )}
 
-      <Accordion
-        type="single"
-        collapsible
-      >
+    <Accordion
+      type="single"
+      collapsible
+    >
 
-        <AccordionItem value="hitung">
+      <AccordionItem value="hitung">
 
-          <AccordionTrigger>
-            <div className="flex items-center gap-3">
-              <Calculator size={18}/>
-              Hitung Parameter
-            </div>
-          </AccordionTrigger>
+        <AccordionTrigger>
 
-          <AccordionContent>
+          <div className="
+          flex items-center gap-3
+          ">
 
-            <div className="
-            ml-8
-            space-y-2
-            ">
+            <Calculator size={18}/>
 
-              <Link href="/hitung_parameter/input">
-                <div className="py-2">
-                  Input
-                </div>
-              </Link>
+            Hitung Parameter
 
-              <Link href="/hitung_parameter/analysis">
-                <div className="py-2">
-                  Analysis
-                </div>
-              </Link>
+          </div>
 
-            </div>
+        </AccordionTrigger>
 
-          </AccordionContent>
+        <AccordionContent>
 
-        </AccordionItem>
+          <div className="
+          ml-8
+          space-y-3
+          ">
 
-      </Accordion>
+            <Link
+              href="/hitung_parameter/input"
+            >
+              <div className="py-2">
+                Input
+              </div>
+            </Link>
 
-      <Link href="/transformasi">
-        <div className="
-        flex items-center
-        gap-3 py-4
-        ">
-          <Shuffle size={18}/>
-          Transformasi Datum
-        </div>
-      </Link>
+            <Link
+              href="/hitung_parameter/analysis"
+            >
+              <div className="py-2">
+                Analysis
+              </div>
+            </Link>
 
-      <Link href="/parameter_saya">
-        <div className="
-        flex items-center
-        gap-3 py-4
-        ">
-          <List size={18}/>
-          Parameter Saya
-        </div>
-      </Link>
+          </div>
 
-    </SheetContent>
-    
-  </Sheet>
-</motion.div>
+        </AccordionContent>
+
+      </AccordionItem>
+
+    </Accordion>
+
+
+    <Link href="/transformasi">
+
+      <div className="
+      flex items-center
+      gap-3
+      py-4
+      border-b
+      ">
+
+        <Shuffle size={18}/>
+
+        Transformasi Datum
+
+      </div>
+
+    </Link>
+
+
+    <Link href="/parameter_saya">
+
+      <div className="
+      flex items-center
+      gap-3
+      py-4
+      ">
+
+        <List size={18}/>
+
+        Parameter Saya
+
+      </div>
+
+    </Link>
+
+  </div>
+
+</DrawerContent>
+        </Drawer>
 </div>
         {/* SIDEBAR */}
         <aside
@@ -271,7 +306,7 @@ export default function DashboardLayout({
         </aside>
 
         {/* CONTENT */}
-        <main className="flex-1 p-6 bg-white overflow-auto">
+        <main className="flex-1 p-6 pb-28 md:pb-6 bg-white overflow-auto">
           {children}
         </main>
       </div>

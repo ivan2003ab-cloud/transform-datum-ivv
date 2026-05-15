@@ -22,7 +22,6 @@
     "leaflet-ellipse": "^0.9.1",
     "lucide-react": "^0.574.0",
     "mathjs": "^15.1.1",
-    "motion": "^12.38.0",
     "next": "16.1.6",
     "prisma": "^5.22.0",
     "radix-ui": "^1.4.3",
@@ -31,6 +30,7 @@
     "react-leaflet": "^5.0.0",
     "recharts": "^3.8.1",
     "tailwind-merge": "^3.4.1",
+    "vaul": "^1.1.2",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {

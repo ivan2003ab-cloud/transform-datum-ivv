@@ -23,7 +23,7 @@ export default function EditStatus({
   const [confidence, setConfidence] = useState(1);
 
   // =========================
-  // 📊 STATISTIK
+  // STATISTIK
   // =========================
   const getStats = () => {
     if (!editData || editData.length === 0) {
@@ -65,7 +65,7 @@ export default function EditStatus({
   const stats = getStats();
 
   // =========================
-  // 🎯 COLOR LOGIC
+  // COLOR LOGIC
   // =========================
   const getColor = (val: number, mean: number, std: number) => {
     if (std === 0) return "bg-gray-100";
@@ -75,7 +75,7 @@ export default function EditStatus({
   };
 
   // =========================
-  // 🚀 SUBMIT
+  //SUBMIT
   // =========================
   const onSubmit = async () => {
     setLoading(true);
@@ -91,7 +91,7 @@ export default function EditStatus({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="!w-[80vw] !max-w-[800px] p-0">
+      <DialogContent className="w-[95vw] md:w-[80vw] !max-w-[800px] p-0">
 
         {/* HEADER */}
         <DialogHeader className="px-6 py-4 border-b">
@@ -102,7 +102,7 @@ export default function EditStatus({
         <div className="px-6 py-1 space-y-4">
 
           {/* CONFIDENCE */}
-          <div className="flex items-center gap-3 mb-4">
+          <div className="flex flex-col items-start gap-2 md:flex-row md:items-center mb-4">
             <span className="text-sm font-medium">
               Tingkat kepercayaan:
             </span>
@@ -118,9 +118,9 @@ export default function EditStatus({
           </div>
 
           {/* TABLE HEADER (FIXED) */}
-          <div className="h-[45vh] overflow-y-auto border rounded-lg">
+          <div className="h-[45vh] overflow-auto border rounded-lg">
 
-  <table className="w-full table-fixed text-sm border-collapse">
+  <table className="min-w-[650px]w-full table-fixed text-xs md:text-sm border-collapse">
 
     {/*FIX LEBAR KOLOM */}
     <colgroup>
@@ -174,7 +174,7 @@ export default function EditStatus({
                   updated[i].status = e.target.value;
                   setEditData(updated);
                 }}
-                className="border rounded px-2 py-1 text-sm"
+                className="border rounded px-1 md:px-2 py-1 text-xs md:text-sm"
               >
                 <option value="sekutu">sekutu</option>
                 <option value="uji">uji</option>
@@ -228,10 +228,10 @@ export default function EditStatus({
         </div>
 
         {/* FOOTER BUTTON */}
-        <DialogFooter className="px-6 py-3 border-t flex items-center">
+        <DialogFooter className="px-4 md:px-6 py-3 border-t flex flex-col md:flex-row md:items-center">
 
           {/* LEGEND */}
-          <div className="flex items-center gap-5 text-sm">
+          <div className="grid grid-cols-1 md:flex gap-3 text-xs md:text-sm">
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 bg-green-100 border border-green-400 rounded"></div>
               <span>Memenuhi (±{confidence}σ)</span>
@@ -244,11 +244,11 @@ export default function EditStatus({
           </div>
 
           {/* BUTTON */}
-          <div className="ml-auto flex gap-2">
+          <div className="w-full md:w-auto md:ml-auto flex flex-col md:flex-row gap-2">
             <Button
               onClick={onSubmit}
               disabled={loading}
-              className="bg-emerald-700 hover:bg-emerald-800 flex items-center gap-2"
+              className="w-full md:w-auto bg-emerald-700 hover:bg-emerald-800 flex items-center gap-2"
             >
               {loading && <Spinner />}
               {loading ? "Processing..." : "Recalculate"}
