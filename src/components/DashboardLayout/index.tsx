@@ -6,15 +6,18 @@ import {
   Calculator,
   Shuffle,
   List,
-  User,
   ChevronLeft,
   ChevronRight,
   ChevronDown,
   ChevronUp,
+  Menu,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { motion } from "motion/react";
 
 export default function DashboardLayout({
   children,
@@ -76,12 +79,142 @@ export default function DashboardLayout({
           )}
         </div>
       </div>
-
       {/* BODY */}
       <div className="flex flex-1 overflow-hidden">
+        <div className="md:hidden fixed inset-0 pointer-events-none z-50">
+          <motion.div
+    drag
+    dragMomentum={false}
+    dragElastic={0.05}
+    dragConstraints={{
+      left: -250,
+      right: 0,
+      top: -500,
+      bottom: 0,
+    }}
+    className="
+    absolute
+    top-24
+    right-5
+    pointer-events-auto
+    "
+  >
+  <Sheet>
+
+    <SheetTrigger asChild>
+
+      <button
+        className="
+        w-14 h-14
+        rounded-full
+        shadow-xl
+        bg-gradient-to-r
+        from-blue-900
+        to-emerald-600
+        text-white
+        flex items-center
+        justify-center
+        "
+      >
+        <Menu size={22}/>
+      </button>
+
+    </SheetTrigger>
+
+    <SheetContent
+      side="bottom"
+      className="
+      rounded-t-3xl
+      h-auto
+      pb-8
+      "
+    >
+      <SheetHeader>
+
+    <SheetTitle>
+      Menu
+    </SheetTitle>
+
+  </SheetHeader>
+
+      {/* handle atas */}
+      <div className="
+      w-12 h-1
+      bg-gray-300
+      rounded-full
+      mx-auto
+      mb-6
+      " />
+
+      <Accordion
+        type="single"
+        collapsible
+      >
+
+        <AccordionItem value="hitung">
+
+          <AccordionTrigger>
+            <div className="flex items-center gap-3">
+              <Calculator size={18}/>
+              Hitung Parameter
+            </div>
+          </AccordionTrigger>
+
+          <AccordionContent>
+
+            <div className="
+            ml-8
+            space-y-2
+            ">
+
+              <Link href="/hitung_parameter/input">
+                <div className="py-2">
+                  Input
+                </div>
+              </Link>
+
+              <Link href="/hitung_parameter/analysis">
+                <div className="py-2">
+                  Analysis
+                </div>
+              </Link>
+
+            </div>
+
+          </AccordionContent>
+
+        </AccordionItem>
+
+      </Accordion>
+
+      <Link href="/transformasi">
+        <div className="
+        flex items-center
+        gap-3 py-4
+        ">
+          <Shuffle size={18}/>
+          Transformasi Datum
+        </div>
+      </Link>
+
+      <Link href="/parameter_saya">
+        <div className="
+        flex items-center
+        gap-3 py-4
+        ">
+          <List size={18}/>
+          Parameter Saya
+        </div>
+      </Link>
+
+    </SheetContent>
+    
+  </Sheet>
+</motion.div>
+</div>
         {/* SIDEBAR */}
         <aside
-          className={`bg-gray-200 border-r border-gray-300 text-gray-800 transition-all duration-300 ease-in-out h-full
+          className={`hidden md:block bg-gray-200 border-r border-gray-300 text-gray-800 transition-all duration-300 ease-in-out h-full
           ${sidebarOpen ? "w-64" : "w-16"}`}
         >
           {sidebarOpen && (

@@ -373,21 +373,21 @@ useEffect(() => {
   </div>
 
 </Tabs>
-    <div className="flex items-center justify-between mb-6">
-  <div id="jumlah-titik" className="flex gap-4">
-    <div className="px-5 py-2 border border-blue-300 text-blue-600 rounded-xl text-sm font-medium bg-blue-50">
-      Jumlah Titik Sekutu: {jumlahSekutu}
-    </div>
-    <div className="px-5 py-2 border border-blue-300 text-blue-600 rounded-xl text-sm font-medium bg-blue-50">
-      Jumlah Titik Uji: {jumlahUji}
-    </div>
-  </div>
+    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
+      <div id="jumlah-titik" className="grid grid-cols-1 md:flex gap-3">
+        <div className="px-5 py-2 border border-blue-300 text-blue-600 rounded-xl text-sm font-medium bg-blue-50">
+          Jumlah Titik Sekutu: {jumlahSekutu}
+        </div>
+        <div className="px-5 py-2 border border-blue-300 text-blue-600 rounded-xl text-sm font-medium bg-blue-50">
+          Jumlah Titik Uji: {jumlahUji}
+        </div>
+      </div>
 
   <button
   id="edit-status-button"
   onClick={openEditStatus}
   className="
-    px-6 py-2 flex items-center gap-2
+    px-4 md:px-6 py-2 flex items-center gap-2
     bg-gradient-to-r from-emerald-700 to-emerald-600
     text-white rounded-full text-sm font-semibold
     transition-all duration-200
@@ -396,7 +396,8 @@ useEffect(() => {
   "
 >
   <Pencil size={16} />
-  Edit Status Titik
+    Edit Status Titik
+
 </button>
 </div>
       {/* RESULT LIST */}
@@ -458,8 +459,8 @@ useEffect(() => {
         <div id="hasil-transformasi">
           <span className="font-semibold">Hasil Parameter Transformasi</span>
 
-          <div className="mt-4 bg-gray-200 rounded-xl p-6">
-            <table className="w-full text-sm border border-gray-300">
+          <div className="mt-4 bg-gray-200 rounded-xl p-3 md:p-6 overflow-x-auto">
+            <table className="min-w-[650px]w-full text-sm border border-gray-300">
               <thead className="bg-gray-300">
                 <tr>
                 <th className="border p-2">Parameter</th>
@@ -497,9 +498,9 @@ useEffect(() => {
                 ))}
               </tbody>
             </table>
-          <div className="flex justify-between items-center mt-4">
+          <div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-center mt-4">
 
-            <div className="flex gap-3">
+            <div className="flex justify-center md:justify-start gap-3">
 
   {/* BANTUAN */}
   <button
@@ -522,7 +523,9 @@ useEffect(() => {
     "
   >
     <CircleHelp size={16} />
+    <span className="hidden sm:inline">
     Bantuan
+    </span>
   </button>
 
   {/* SIMPAN */}
@@ -547,7 +550,9 @@ useEffect(() => {
     "
   >
     <Save size={16} />
+    <span className="hidden sm:inline">
     Simpan
+    </span>
   </button>
 
 </div>
@@ -556,11 +561,16 @@ useEffect(() => {
             <button
               id="to-transform-button"
               onClick={handleToTransform}
-              className="px-6 py-2 bg-gradient-to-r from-blue-900 to-blue-700 text-white rounded-xl hover:bg-blue-800 transition-all duration-200
+              className="w-full md:w-auto px-5 md:px-6 py-2 bg-gradient-to-r from-blue-900 to-blue-700 text-white rounded-xl hover:bg-blue-800 transition-all duration-200
   hover:-translate-y-1 hover:scale-[1.03]
   hover:shadow-lg active:scale-[0.97]"
             >
-              Lanjutkan Transformasi Datum →
+              <span className="hidden sm:inline">
+              Lanjutkan Transformasi →
+              </span>
+              <span className="sm:hidden">
+              Transformasi →
+              </span>
             </button>
           </div>
         </div>

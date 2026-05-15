@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import * as XLSX from "xlsx";
 import { normalizeToCartesian } from "@/lib/coordinateConverter";
 import { runAdjustment } from "@/lib/runAdjustment";
-import { Upload, CircleHelp } from "lucide-react";
+import { Upload, CircleHelp, Loader2, ArrowRight, FileSpreadsheet } from "lucide-react";
 import { startInputGuide } from "@/components/Guide/inputguide";
 import TemplateInput from "@/components/Dialogs/TemplateInput";
 
@@ -220,7 +220,10 @@ export default function InputPage() {
     text-white
     hover:opacity-90`}
   >
+  <FileSpreadsheet size={16} className="md:hidden" />
+  <span className="hidden md:inline">
     Template
+  </span>
   </button>
 </TemplateInput>
 
@@ -330,15 +333,34 @@ export default function InputPage() {
   `}
 >
   <CircleHelp size={18} />
-  Bantuan
+  <span className="hidden sm:inline">
+    Bantuan
+  </span>
 </button>
         <button
           id ="proses-button"
           onClick={handleProses}
           disabled={loading}
-          className={`px-8 py-3 rounded-xl ${animatedButton} bg-gradient-to-r from-emerald-800 to-emerald-600 text-white font-semibold hover:opacity-90 disabled:bg-gray-400`} 
+          className={`px-4 md:px-8 py-3 rounded-xl ${animatedButton} bg-gradient-to-r from-emerald-800 to-emerald-600 text-white font-semibold hover:opacity-90 disabled:bg-gray-400`} 
         >
-          {loading ? "Memproses..." : "Proses"}
+          {loading ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span className="hidden md:inline">
+                Memproses...
+              </span>
+            </>
+          ) : (
+            <>
+          {/* HP */}
+              <ArrowRight className="md:hidden" size={18}/>
+
+          {/* Laptop */}
+              <span className="hidden md:inline">
+                Proses
+              </span>
+            </>
+          )}
         </button>
       </div>
 
