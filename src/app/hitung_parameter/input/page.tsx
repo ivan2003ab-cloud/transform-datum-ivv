@@ -188,7 +188,7 @@ export default function InputPage() {
   ];
 
   return (
-    <div className="p-6 space-y-4">
+    <div className="p-3 space-y-4 md:p-6 md:space-y-4">
       <div id="map-preview" className="rounded-3xl h-[300px] overflow-hidden border border-gray-200">
         {parsing ? (
           <div className="flex items-center justify-center h-full text-gray-400">
@@ -226,7 +226,9 @@ export default function InputPage() {
 
           <label id="upload-label" className={`px-6 py-2 ${animatedButton} flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-800 to-emerald-600 text-white hover:opacity-90 cursor-pointer`}>
             <Upload size={16} />
+            <span className="hidden sm:inline">
             Upload
+            </span>
             <input
               type="file"
               className="hidden"
@@ -248,7 +250,23 @@ export default function InputPage() {
           Struktur data
         </h2>
 
-        <div className="grid grid-cols-3 gap-6">
+      {/* HP */ }
+        <select 
+          value={struktur}
+          onChange={(e) => setStruktur(e.target.value)}
+          className="w-full p-2 border rounded-lg bg-white md:hidden"
+        >
+        {strukturOptions.map((item) => (
+          <option
+            key={item.value}
+            value={item.value}
+          >
+            {item.label}
+          </option>
+        ))}
+        </select>
+        {/* Laptop */ }
+        <div className="hidden md:grid md:grid-cols-3 gap-6">
           {strukturOptions.map((item) => (
             <label key={item.value} className="flex items-center gap-2">
               <input
@@ -266,8 +284,23 @@ export default function InputPage() {
         <h2 className="font-semibold text-lg mb-3 text-blue-900">
           Metode Perataan
         </h2>
-
-        <div className="grid grid-cols-3 gap-6">
+        {/* HP */ }
+        <select 
+          value={metode}
+          onChange={(e) => setMetode(e.target.value)}
+          className="w-full p-2 border rounded-lg bg-white md:hidden"
+        >
+        {metodeOptions.map((item) => (
+          <option
+            key={item.value}
+            value={item.value}
+          >
+            {item.label}
+          </option>
+        ))}
+        </select>
+        {/* Laptop */ }
+        <div className="hidden md:grid md:grid-cols-3 gap-6">
           {metodeOptions.map((item) => (
             <label key={item.value} className="flex items-center gap-2">
               <input
