@@ -212,7 +212,7 @@ export default function InputPage() {
             Memuat data...
           </div>
         ) : parsedData.length > 0 ? (
-          <MapParamInput data={parsedData} struktur={struktur} />
+          <MapParamInput data={parsedData} />
         ) : (
           <div className="flex items-center justify-center h-full text-gray-400">
             Upload file untuk melihat preview map
