@@ -91,6 +91,8 @@ export function normalizeToCartesian(data: any[], struktur: string) {
 
       return {
         point: row.point,
+        status: row.status,
+        selected: row.selected,
         x1: p1.X,
         y1: p1.Y,
         z1: p1.Z,
@@ -112,6 +114,8 @@ export function normalizeToCartesian(data: any[], struktur: string) {
 
       return {
         point: row.point,
+        status: row.status,
+        selected: row.selected,
         x1: p1.X,
         y1: p1.Y,
         z1: p1.Z,
