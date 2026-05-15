@@ -11,21 +11,28 @@ import { useEffect } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-// FIX icon broken di Next.js
-delete (L.Icon.Default.prototype as any)._getIconUrl;
+import { cartesianToGeodetic } from "@/lib/coordinateConverter";
 
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl:
-    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+// =======================
+// ICON CUSTOM
+// =======================
+const kala1Icon = new L.Icon({
   iconUrl:
-    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+    "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png",
   shadowUrl:
     "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
 });
-import {
-  cartesianToGeodetic,
-  dmsDecimalToDD,
-} from "@/lib/coordinateConverter";
+
+const kala2Icon = new L.Icon({
+  iconUrl:
+    "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png",
+  shadowUrl:
+    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+});
 
 // =======================
 // AUTO FIT BOUNDS
@@ -34,13 +41,16 @@ function FitBounds({ data }: { data: any[] }) {
   const map = useMap();
 
   useEffect(() => {
-    if (!data || data.length === 0) return;
+    if (!data?.length) return;
 
     const bounds: [number, number][] = [];
 
     data.forEach((p) => {
-      if (p.lat1 && p.lon1) bounds.push([p.lat1, p.lon1]);
-      if (p.lat2 && p.lon2) bounds.push([p.lat2, p.lon2]);
+      if (p.lat1 != null && p.lon1 != null)
+        bounds.push([p.lat1, p.lon1]);
+
+      if (p.lat2 != null && p.lon2 != null)
+        bounds.push([p.lat2, p.lon2]);
     });
 
     if (bounds.length === 0) return;
@@ -48,7 +58,9 @@ function FitBounds({ data }: { data: any[] }) {
     if (bounds.length === 1) {
       map.setView(bounds[0], 15);
     } else {
-      map.fitBounds(bounds, { padding: [50, 50] });
+      map.fitBounds(bounds, {
+        padding: [50, 50],
+      });
     }
   }, [data, map]);
 
@@ -56,69 +68,139 @@ function FitBounds({ data }: { data: any[] }) {
 }
 
 // =======================
-// MAIN COMPONENT
+// LEGENDA
+// =======================
+function Legend() {
+  const map = useMap();
+
+  useEffect(() => {
+    const legend = new L.Control({
+      position: "bottomright",
+    });
+
+    legend.onAdd = () => {
+      const div = L.DomUtil.create(
+        "div",
+        "bg-white p-3 rounded-xl shadow-lg"
+      );
+
+      div.innerHTML = `
+        <div style="font-size:14px;font-weight:bold;margin-bottom:8px">
+          Legenda
+        </div>
+
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <span style="
+          width:12px;
+          height:12px;
+          border-radius:50%;
+          background:blue;
+          display:inline-block"></span>
+          Titik Kala 1
+        </div>
+
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <span style="
+          width:12px;
+          height:12px;
+          border-radius:50%;
+          background:green;
+          display:inline-block"></span>
+          Titik Kala 2
+        </div>
+
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="
+          width:20px;
+          height:3px;
+          background:red;
+          display:inline-block"></span>
+          Perpindahan titik
+        </div>
+      `;
+
+      return div;
+    };
+
+    legend.addTo(map);
+
+    return () => {
+      legend.remove();
+    };
+  }, [map]);
+
+  return null;
+}
+
+// =======================
+// MAIN
 // =======================
 export default function MapParamInput({
   data,
-  struktur,
 }: {
   data: any[];
-  struktur: string;
 }) {
-  // =======================
-  // NORMALISASI KE GEODETIK
-  // =======================
-  const toGeodetic = () => {
-  if (!data || data.length === 0) return [];
 
-  return cartesianToGeodetic(data);
-};
+  const geoData = cartesianToGeodetic(data);
 
-  const geoData = toGeodetic();
   return (
     <MapContainer
-      center={[-7.8, 110.4]} // fallback
+      center={[-7.8,110.4]}
       zoom={10}
-      style={{ height: "100%", width: "100%" }}
+      style={{
+        height:"100%",
+        width:"100%",
+      }}
     >
-      {/* BASE MAP */}
       <TileLayer
-        attribution="&copy; OpenStreetMap"
+        attribution="© OpenStreetMap"
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
 
-      {/* 🔥 AUTO ZOOM */}
-      <FitBounds data={geoData} />
+      <FitBounds data={geoData}/>
+      <Legend />
 
-      {/* 🔥 RENDER TITIK + GARIS */}
-      {geoData.map((p, i) => {
-  if (!p.lat1 || !p.lon1 || !p.lat2 || !p.lon2) return null;
+      {geoData.map((p,i)=>{
 
-  const line: [number, number][] = [
-    [p.lat1, p.lon1],
-    [p.lat2, p.lon2],
-  ];
+        if(
+          p.lat1==null ||
+          p.lon1==null ||
+          p.lat2==null ||
+          p.lon2==null ||
+          isNaN(p.lat1) ||
+          isNaN(p.lon1) ||
+          isNaN(p.lat2) ||
+          isNaN(p.lon2)
+        ) return null;
 
-  return (
-    <div key={i}>
-      {/* titik kala 1 */}
-      <Marker position={[p.lat1, p.lon1]} />
+        return(
+          <>
+            <Marker
+              key={`k1-${i}`}
+              position={[p.lat1,p.lon1]}
+              icon={kala1Icon}
+            />
 
-      {/* titik kala 2 */}
-      <Marker position={[p.lat2, p.lon2]} />
+            <Marker
+              key={`k2-${i}`}
+              position={[p.lat2,p.lon2]}
+              icon={kala2Icon}
+            />
 
-      {/* 🔥 GARIS */}
-      <Polyline
-        positions={line}
-        pathOptions={{
-          color: "red",
-          weight: 3,
-        }}
-      />
-    </div>
-  );
-  
-})}
+            <Polyline
+              key={`line-${i}`}
+              positions={[
+                [p.lat1,p.lon1],
+                [p.lat2,p.lon2]
+              ]}
+              pathOptions={{
+                color:"red",
+                weight:3
+              }}
+            />
+          </>
+        )
+      })}
 
     </MapContainer>
   );
