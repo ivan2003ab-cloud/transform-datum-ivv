@@ -230,6 +230,7 @@ export default function InputPage() {
             <input
               type="file"
               className="hidden"
+              accept=".xlsx,.xls,.csv"
               onChange={handleFileChange}
             />
           </label>

@@ -184,6 +184,7 @@ export default function TransformPage() {
             Upload
             <input
               type="file"
+              accept=".xlsx,.xls,.csv"
               onChange={handleFileChange}
               hidden
             />
