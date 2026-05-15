@@ -69,35 +69,10 @@ export default function MapParamInput({
   // NORMALISASI KE GEODETIK
   // =======================
   const toGeodetic = () => {
-    if (!data || data.length === 0) return [];
+  if (!data || data.length === 0) return [];
 
-    // 🔥 CARTESIAN → GEODETIK
-    if (struktur === "cartesian") {
-      return cartesianToGeodetic(data);
-    }
-
-    // 🔥 DD → langsung pakai
-    if (struktur === "dd") {
-      return data.map((d) => ({
-        lat1: Number(d.lat1),
-        lon1: Number(d.lon1),
-        lat2: Number(d.lat2),
-        lon2: Number(d.lon2),
-      }));
-    }
-
-    // 🔥 DMS → convert ke DD
-    if (struktur === "dms") {
-      return data.map((d) => ({
-        lat1: dmsDecimalToDD(Number(d.lat1)),
-        lon1: dmsDecimalToDD(Number(d.lon1)),
-        lat2: dmsDecimalToDD(Number(d.lat2)),
-        lon2: dmsDecimalToDD(Number(d.lon2)),
-      }));
-    }
-
-    return [];
-  };
+  return cartesianToGeodetic(data);
+};
 
   const geoData = toGeodetic();
   return (
