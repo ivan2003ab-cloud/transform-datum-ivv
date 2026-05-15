@@ -8,6 +8,7 @@ import { normalizeToCartesian } from "@/lib/coordinateConverter";
 import { runAdjustment } from "@/lib/runAdjustment";
 import { Upload, CircleHelp } from "lucide-react";
 import { startInputGuide } from "@/components/Guide/inputguide";
+import TemplateInput from "@/components/Dialogs/TemplateInput";
 
 const MapParamInput = dynamic(
   () => import("@/components/Map/mapParamInput"),
@@ -23,7 +24,6 @@ export default function InputPage() {
   const [parsedData, setParsedData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [parsing, setParsing] = useState(false);
-  const [showTemplatePopup, setShowTemplatePopup] = useState(false);
   useEffect(() => {
   const alreadySeen = localStorage.getItem(
     "guide-input-page"
@@ -145,23 +145,6 @@ export default function InputPage() {
     setParsing(false);
   };
 
-  const downloadTemplate = (type: string) => {
-    let filePath = "";
-
-    if (type === "cartesian") {
-      filePath = "/template-hitungparams-kartesi.xlsx";
-    } else {
-      filePath = "/template-hitungparams-geodetik.xlsx";
-    }
-
-    const link = document.createElement("a");
-    link.href = filePath;
-    link.download = filePath.split("/").pop() || "template.xlsx";
-    link.click();
-
-    setShowTemplatePopup(false);
-  };
-
   const handleProses = async () => {
     if (!parsedData || parsedData.length === 0) {
       alert("Upload file dahulu sebelum memproses.");
@@ -226,12 +209,20 @@ export default function InputPage() {
         </span>
 
         <div className="flex gap-3">
-          <button id="template-button"
-            onClick={() => setShowTemplatePopup(true)}
-            className={`px-6 py-2 ${animatedButton} rounded-full bg-gradient-to-r from-blue-600 to-blue-400 text-white hover:opacity-90`}
-          >
-            Template
-          </button>
+          <TemplateInput>
+  <button
+    id="template-button"
+    className={`px-6 py-2 ${animatedButton}
+    rounded-full
+    bg-gradient-to-r
+    from-blue-600
+    to-blue-400
+    text-white
+    hover:opacity-90`}
+  >
+    Template
+  </button>
+</TemplateInput>
 
           <label id="upload-label" className={`px-6 py-2 ${animatedButton} flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-800 to-emerald-600 text-white hover:opacity-90 cursor-pointer`}>
             <Upload size={16} />
@@ -317,38 +308,7 @@ export default function InputPage() {
         </button>
       </div>
 
-      {showTemplatePopup && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-6 w-[350px] space-y-4 shadow-xl">
-            <h2 className="text-lg font-semibold text-blue-900">
-              Pilih Template
-            </h2>
-
-            <div className="flex flex-col gap-3">
-              <button
-                onClick={() => downloadTemplate("cartesian")}
-                className={`px-4 py-2 ${animatedButton} rounded-lg bg-gradient-to-r from-blue-800 to-blue-600 text-white hover:opacity-90`}
-              >
-                Cartesian (XYZ)
-              </button>
-
-              <button
-                onClick={() => downloadTemplate("dd")}
-                className={`px-4 py-2 ${animatedButton} rounded-lg bg-gradient-to-r from-blue-800 to-blue-600 text-white hover:opacity-90`}
-              >
-                Geodetik (Degree)
-              </button>
-            </div>
-
-            <button
-              onClick={() => setShowTemplatePopup(false)}
-              className={`text-sm ${animatedButton} text-gray-500 hover:underline`}
-            >
-              Batal
-            </button>
-          </div>
-        </div>
-      )}
+      
     </div>
   );
 }

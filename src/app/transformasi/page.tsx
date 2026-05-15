@@ -6,6 +6,8 @@ import {
   normalizeToCartesian,
   cartesianToGeodetic,
 } from "@/lib/coordinateConverter";
+import { Upload } from "lucide-react";
+import TemplateTransform from "@/components/Dialogs/TemplateTransform";
 
 const toRad = (val: number, unit: string) =>
   unit === "degree" ? (val * Math.PI) / 180 : val;
@@ -13,6 +15,12 @@ const toRad = (val: number, unit: string) =>
 export default function TransformPage() {
   const [format, setFormat] = useState("cartesian");
   const [angleUnit, setAngleUnit] = useState("radian");
+  const [fileName, setFileName] = useState<string | null>(null);
+  const [data, setData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const animatedButton =
+    "transition-all duration-300 ease-out hover:-translate-y-0.5 hover:scale-105 hover:shadow-lg active:scale-95";
 
   const [params, setParams] = useState({
     tx: "",
@@ -23,28 +31,30 @@ export default function TransformPage() {
     rz: "",
     s: "",
   });
+
   useEffect(() => {
-  const stored = localStorage.getItem("transformParams");
+    const stored = localStorage.getItem("transformParams");
 
-  if (stored) {
-    const parsed = JSON.parse(stored);
+    if (stored) {
+      const parsed = JSON.parse(stored);
 
-    setParams({
-      tx: parsed.tx ?? "",
-      ty: parsed.ty ?? "",
-      tz: parsed.tz ?? "",
-      rx: parsed.rx ?? "",
-      ry: parsed.ry ?? "",
-      rz: parsed.rz ?? "",
-      s: parsed.s ?? "",
-    });
-  }
-}, []);
-  const [data, setData] = useState<any[]>([]);
+      setParams({
+        tx: parsed.tx ?? "",
+        ty: parsed.ty ?? "",
+        tz: parsed.tz ?? "",
+        rx: parsed.rx ?? "",
+        ry: parsed.ry ?? "",
+        rz: parsed.rz ?? "",
+        s: parsed.s ?? "",
+      });
+    }
+  }, []);
 
   const handleFileChange = async (e: any) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    setFileName(file.name);
 
     const buffer = await file.arrayBuffer();
     const workbook = XLSX.read(buffer);
@@ -54,107 +64,147 @@ export default function TransformPage() {
     setData(json);
   };
 
-  const handleTransform = () => {
-    const prepared = data.map((row: any) => {
-      if (format === "cartesian") {
-        return {
-          point: row.Point,
-          x1: row.X,
-          y1: row.Y,
-          z1: row.Z,
-          x2: 0,
-          y2: 0,
-          z2: 0,
-        };
-      }
-
-      return {
-        point: row.Point,
-        lat1: row.latitude,
-        lon1: row.longitude,
-        h1: row.height,
-        lat2: 0,
-        lon2: 0,
-        h2: 0,
-      };
-    });
-
-    const cartesian = normalizeToCartesian(prepared, format);
-
-    const tx = Number(params.tx);
-    const ty = Number(params.ty);
-    const tz = Number(params.tz);
-
-    const rx = toRad(Number(params.rx), angleUnit);
-    const ry = toRad(Number(params.ry), angleUnit);
-    const rz = toRad(Number(params.rz), angleUnit);
-
-    const s = Number(params.s);
-
-    const transformed = cartesian.map((p: any) => {
-      const { x1, y1, z1 } = p;
-
-      const r11 = Math.cos(rx) * Math.cos(ry);
-      const r22 = -Math.sin(rx) * Math.sin(ry) * Math.sin(rz) + Math.cos(rx) * Math.cos(rz);
-      const r33 = Math.cos(rx) * Math.cos(ry);
-
-      const x2 = s * (r11 * x1) + tx;
-      const y2 = s * (r22 * y1) + ty;
-      const z2 = s * (r33 * z1) + tz;
-
-      return { ...p, x2, y2, z2 };
-    });
-
-    let output;
-
-    if (format === "cartesian") {
-      output = transformed.map((p: any) => ({
-        Point: p.point,
-        X: p.x2,
-        Y: p.y2,
-        Z: p.z2,
-      }));
-    } else {
-      const geo = cartesianToGeodetic(transformed);
-
-      output = geo.map((p: any) => ({
-        Point: p.point,
-        latitude: p.lat2,
-        longitude: p.lon2,
-        height: p.h2,
-      }));
+  const handleTransform = async () => {
+    if (!data.length) {
+      alert("Upload file dahulu");
+      return;
     }
 
-    const ws = XLSX.utils.json_to_sheet(output);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Result");
-    XLSX.writeFile(wb, "transform_result.xlsx");
+    try {
+      setLoading(true);
+
+      await new Promise((r) => setTimeout(r, 500));
+
+      const prepared = data.map((row: any) => {
+        if (format === "cartesian") {
+          return {
+            point: row.Point,
+            x1: row.X,
+            y1: row.Y,
+            z1: row.Z,
+            x2: 0,
+            y2: 0,
+            z2: 0,
+          };
+        }
+
+        return {
+          point: row.Point,
+          lat1: row.latitude,
+          lon1: row.longitude,
+          h1: row.height,
+          lat2: 0,
+          lon2: 0,
+          h2: 0,
+        };
+      });
+
+      const cartesian = normalizeToCartesian(prepared, format);
+
+      const tx = Number(params.tx);
+      const ty = Number(params.ty);
+      const tz = Number(params.tz);
+
+      const rx = toRad(Number(params.rx), angleUnit);
+      const ry = toRad(Number(params.ry), angleUnit);
+      const rz = toRad(Number(params.rz), angleUnit);
+
+      const s = Number(params.s);
+
+      const transformed = cartesian.map((p: any) => {
+        const { x1, y1, z1 } = p;
+
+        const r11 = Math.cos(rx) * Math.cos(ry);
+        const r22 = -Math.sin(rx) * Math.sin(ry) * Math.sin(rz) + Math.cos(rx) * Math.cos(rz);
+        const r33 = Math.cos(rx) * Math.cos(ry);
+
+        const x2 = s * (r11 * x1) + tx;
+        const y2 = s * (r22 * y1) + ty;
+        const z2 = s * (r33 * z1) + tz;
+
+        return { ...p, x2, y2, z2 };
+      });
+
+      let output;
+
+      if (format === "cartesian") {
+        output = transformed.map((p: any) => ({
+          Point: p.point,
+          X: p.x2,
+          Y: p.y2,
+          Z: p.z2,
+        }));
+      } else {
+        const geo = cartesianToGeodetic(transformed);
+
+        output = geo.map((p: any) => ({
+          Point: p.point,
+          latitude: p.lat2,
+          longitude: p.lon2,
+          height: p.h2,
+        }));
+      }
+
+      const ws = XLSX.utils.json_to_sheet(output);
+      const wb = XLSX.utils.book_new();
+
+      XLSX.utils.book_append_sheet(wb, ws, "Result");
+      XLSX.writeFile(wb, "transform_result.xlsx");
+
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Transformasi Koordinat</h1>
+      <h1 className="text-2xl font-bold mb-6">
+        Transformasi Koordinat
+      </h1>
 
       {/* HEADER INPUT */}
       <div className="bg-gradient-to-r from-blue-100 to-emerald-100 p-4 rounded-xl flex justify-between items-center mb-6">
-        <span className="font-semibold text-blue-900">Input data</span>
+        <span className="font-semibold text-blue-900">
+          Input data
+        </span>
 
         <div className="flex gap-3">
-          <button className="bg-gradient-to-r from-blue-600 to-blue-400 text-white px-5 py-2 rounded-full">
-            Template
-          </button>
-          <label className="bg-gradient-to-r from-emerald-800 to-emerald-600 text-white px-5 py-2 rounded-full cursor-pointer">
+          <TemplateTransform>
+            <button
+              className={`bg-gradient-to-r from-blue-600 to-blue-400 text-white px-5 py-2 rounded-full ${animatedButton}`}
+            >
+              Template
+            </button>
+          </TemplateTransform>
+
+          <label
+            className={`bg-gradient-to-r from-emerald-800 to-emerald-600 text-white px-5 py-2 rounded-full cursor-pointer flex items-center gap-2 ${animatedButton}`}
+          >
+            <Upload size={16} />
             Upload
-            <input type="file" onChange={handleFileChange} hidden />
+            <input
+              type="file"
+              onChange={handleFileChange}
+              hidden
+            />
           </label>
         </div>
       </div>
 
+      {fileName && (
+        <div className="text-sm text-gray-600">
+          {fileName} ({data.length} titik)
+        </div>
+      )}
+
       {/* MAIN CONTENT */}
       <div className="bg-white p-6 rounded-xl shadow-sm">
+
         {/* STRUKTUR */}
         <div className="mb-6">
-          <h2 className="text-blue-900 font-semibold mb-3">Struktur data</h2>
+          <h2 className="text-blue-900 font-semibold mb-3">
+            Struktur data
+          </h2>
 
           <div className="flex gap-12">
             {[
@@ -182,72 +232,71 @@ export default function TransformPage() {
           </h2>
 
           <div className="grid grid-cols-2 gap-6 max-w-3xl">
-  
-  {/* KOLOM KIRI */}
-  <div className="space-y-3">
-    {["tx", "ty", "tz"].map((key) => (
-      <div key={key} className="grid grid-cols-3 items-center gap-2">
-        <div className="font-medium uppercase">{key}</div>
+            <div className="space-y-3">
+              {["tx", "ty", "tz"].map((key) => (
+                <div key={key} className="grid grid-cols-3 items-center gap-2">
+                  <div className="font-medium uppercase">{key}</div>
 
-        <input
-          value={(params as any)[key]}
-          onChange={(e) =>
-            setParams({ ...params, [key]: e.target.value })
-          }
-          className="border p-2 rounded w-full"
-        />
+                  <input
+                    value={(params as any)[key]}
+                    onChange={(e) =>
+                      setParams({ ...params, [key]: e.target.value })
+                    }
+                    className="border p-2 rounded w-full"
+                  />
 
-        <div className="text-sm text-gray-600">m</div>
-      </div>
-    ))}
-  </div>
+                  <div className="text-sm text-gray-600">m</div>
+                </div>
+              ))}
+            </div>
 
-  {/* KOLOM KANAN */}
-  <div className="space-y-3">
-    {["rx", "ry", "rz"].map((key) => (
-      <div key={key} className="grid grid-cols-3 items-center gap-2">
-        <div className="font-medium uppercase">{key}</div>
+            <div className="space-y-3">
+              {["rx", "ry", "rz"].map((key) => (
+                <div key={key} className="grid grid-cols-3 items-center gap-2">
+                  <div className="font-medium uppercase">{key}</div>
 
-        <input
-          value={(params as any)[key]}
-          onChange={(e) =>
-            setParams({ ...params, [key]: e.target.value })
-          }
-          className="border p-2 rounded w-full"
-        />
+                  <input
+                    value={(params as any)[key]}
+                    onChange={(e) =>
+                      setParams({ ...params, [key]: e.target.value })
+                    }
+                    className="border p-2 rounded w-full"
+                  />
 
-        <div className="text-sm text-gray-600">
-          {angleUnit === "degree" ? "deg" : "rad"}
-        </div>
-      </div>
-    ))}
-  </div>
+                  <div className="text-sm text-gray-600">
+                    {angleUnit === "degree" ? "deg" : "rad"}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
 
-</div>
+          <div className="mt-4 max-w-xl">
+            <div className="grid grid-cols-3 items-center gap-2">
+              <div className="font-medium uppercase">S</div>
 
-{/* S di bawah */}
-<div className="mt-4 max-w-xl">
-  <div className="grid grid-cols-3 items-center gap-2">
-    <div className="font-medium uppercase">S</div>
+              <input
+                value={params.s}
+                onChange={(e) =>
+                  setParams({ ...params, s: e.target.value })
+                }
+                className="border p-2 rounded w-full"
+              />
 
-    <input
-      value={params.s}
-      onChange={(e) =>
-        setParams({ ...params, s: e.target.value })
-      }
-      className="border p-2 rounded w-full"
-    />
-
-    <div className="text-sm text-gray-600">ppm</div>
-  </div>
-</div>
+              <div className="text-sm text-gray-600">
+                ppm
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* FOOTER */}
         <div className="flex justify-between items-center mt-6">
           <select
             value={angleUnit}
-            onChange={(e) => setAngleUnit(e.target.value)}
+            onChange={(e) =>
+              setAngleUnit(e.target.value)
+            }
             className="border border-gray-300 p-2 rounded bg-white"
           >
             <option value="degree">Degree</option>
@@ -256,9 +305,10 @@ export default function TransformPage() {
 
           <button
             onClick={handleTransform}
-            className="bg-blue-900 text-white px-6 py-2 rounded-xl"
+            disabled={loading}
+            className={`bg-gradient-to-r from-blue-900 to-blue-700 text-white px-6 py-2 rounded-xl disabled:bg-gray-400 ${animatedButton}`}
           >
-            Proses
+            {loading ? "Memproses..." : "Proses"}
           </button>
         </div>
       </div>

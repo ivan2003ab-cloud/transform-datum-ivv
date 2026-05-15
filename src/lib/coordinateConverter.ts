@@ -90,9 +90,7 @@ export function normalizeToCartesian(data: any[], struktur: string) {
       const p2 = geodeticToECEF(row.lat2, row.lon2, row.h2 || 0);
 
       return {
-        point: row.point,
-        status: row.status,
-        selected: row.selected,
+        ...row,
         x1: p1.X,
         y1: p1.Y,
         z1: p1.Z,
@@ -113,9 +111,7 @@ export function normalizeToCartesian(data: any[], struktur: string) {
       const p2 = geodeticToECEF(lat2, lon2, row.h2 || 0);
 
       return {
-        point: row.point,
-        status: row.status,
-        selected: row.selected,
+        ...row,
         x1: p1.X,
         y1: p1.Y,
         z1: p1.Z,
@@ -138,7 +134,7 @@ export function cartesianToGeodetic(data: any[]) {
     const p2 = ecefToGeodetic(row.x2, row.y2, row.z2);
 
     return {
-      point: row.point,
+      ...row,
 
       lat1: p1.lat,
       lon1: p1.lon,
