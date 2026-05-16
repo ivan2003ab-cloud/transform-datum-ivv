@@ -6,7 +6,7 @@ import {
   normalizeToCartesian,
   cartesianToGeodetic,
 } from "@/lib/coordinateConverter";
-import { Upload } from "lucide-react";
+import { Upload, FileSpreadsheet } from "lucide-react";
 import TemplateTransform from "@/components/Dialogs/TemplateTransform";
 
 const toRad = (val: number, unit: string) =>
@@ -173,7 +173,10 @@ export default function TransformPage() {
             <button
               className={`bg-gradient-to-r from-blue-600 to-blue-400 text-white px-5 py-2 rounded-full ${animatedButton}`}
             >
-              Template
+              <FileSpreadsheet size={16} className="md:hidden" />
+  <span className="hidden md:inline">
+    Template
+  </span>
             </button>
           </TemplateTransform>
 
@@ -181,12 +184,14 @@ export default function TransformPage() {
             className={`bg-gradient-to-r from-emerald-800 to-emerald-600 text-white px-5 py-2 rounded-full cursor-pointer flex items-center gap-2 ${animatedButton}`}
           >
             <Upload size={16} />
+            <span className="hidden sm:inline">
             Upload
+            </span>
             <input
               type="file"
+              className="hidden"
               accept=".xlsx,.xls,.csv"
               onChange={handleFileChange}
-              hidden
             />
           </label>
         </div>
@@ -206,24 +211,78 @@ export default function TransformPage() {
           <h2 className="text-blue-900 font-semibold mb-3">
             Struktur data
           </h2>
+          
+        <div>
+  <div className="md:hidden">
+    <select
+      value={format}
+      onChange={(e) =>
+        setFormat(e.target.value)
+      }
+      className="
+      w-full
+      border
+      rounded-xl
+      px-3 py-2
+      text-sm
+      bg-white
+      "
+    >
+      <option value="cartesian">Cartesian</option>
+      <option value="dd">Geodetik (DD.DDDDD)</option>
+      <option value="dms">Geodetik (DD.MMSSSS)</option>
+    </select>
+  </div>
 
-          <div className="flex gap-12">
-            {[
-              { label: "Cartesian", value: "cartesian" },
-              { label: "Geodetik (DD.DDDDD)", value: "dd" },
-              { label: "Geodetik (DD.MMSSSS)", value: "dms" },
-            ].map((item) => (
-              <label key={item.value} className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  checked={format === item.value}
-                  onChange={() => setFormat(item.value)}
-                  className="accent-blue-600"
-                />
-                {item.label}
-              </label>
-            ))}
-          </div>
+  {/* Laptop → radio */}
+  <div className="hidden md:flex gap-12">
+
+    {[
+      {
+        label: "Cartesian",
+        value: "cartesian",
+      },
+      {
+        label: "Geodetik (DD.DDDDD)",
+        value: "dd",
+      },
+      {
+        label: "Geodetik (DD.MMSSSS)",
+        value: "dms",
+      },
+    ].map((item) => (
+
+      <label
+        key={item.value}
+        className="
+        flex
+        items-center
+        gap-2
+        "
+      >
+
+        <input
+          type="radio"
+          checked={
+            format === item.value
+          }
+          onChange={() =>
+            setFormat(item.value)
+          }
+          className="
+          accent-blue-600
+          "
+        />
+
+        {item.label}
+
+      </label>
+
+    ))}
+
+  </div>
+
+</div>
         </div>
 
         {/* PARAMETER */}
@@ -232,7 +291,7 @@ export default function TransformPage() {
             Parameter Transformasi
           </h2>
 
-          <div className="grid grid-cols-2 gap-6 max-w-3xl">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
             <div className="space-y-3">
               {["tx", "ty", "tz"].map((key) => (
                 <div key={key} className="grid grid-cols-3 items-center gap-2">

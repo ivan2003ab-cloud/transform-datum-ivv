@@ -102,8 +102,8 @@ export default function EditStatus({
         <div className="px-4 md:px-6 py-2 space-y-4 max-h-[70vh] overflow-y-auto">
 
           {/* CONFIDENCE */}
-          <div className="flex flex-col items-start gap-2 md:flex-row md:items-center mb-4">
-            <span className="text-sm font-medium">
+          <div className="flex flex-row items-start gap-2 md:items-center mb-4">
+            <span className="text-sm font-medium md">
               Tingkat kepercayaan:
             </span>
             <select
@@ -261,19 +261,15 @@ text-xs md:text-sm">
           </div>
 
           {/* BUTTON */}
-          <div className="w-full md:w-auto md:ml-auto flex flex-col md:flex-row gap-2">
+          <div className="w-[150px] md:w-auto ml-auto">
             <Button
               onClick={onSubmit}
               disabled={loading}
-              className="w-full md:w-auto bottom-0 bg-emerald-700 hover:bg-emerald-800 flex items-center gap-2"
+              className="w-full bg-emerald-700 hover:bg-emerald-800 flex items-center gap-2"
             >
               {loading && <Spinner />}
               {loading ? "Processing..." : "Recalculate"}
             </Button>
-
-            <DialogClose asChild>
-              <Button variant="outline">Tutup</Button>
-            </DialogClose>
           </div>
 
         </DialogFooter>

@@ -67,26 +67,25 @@ export default function SnoopingDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="!w-[1000px] !max-w-[1000px] p-0">
+      <DialogContent className="w-[95vw] md:w-[1000px] md:max-w-[1000px] max-h-[90vh] p-0">
 
         <DialogHeader className="px-6 py-4 border-b">
           <DialogTitle>Detail Data Snooping</DialogTitle>
         </DialogHeader>
 
-        <div className="px-6 py-4 max-h-[70vh] overflow-auto">
+        <div className="px-4 md:px-6 py-2 space-y-4 max-h-[70vh] overflow-y-auto">
 
-          <div className="flex gap-2 mb-3">
-            <Button variant="secondary" onClick={selectAll}>
+          <div className="flex flex-row gap-2 mb-3">
+            <Button variant="secondary" onClick={selectAll} className={"flex-1 sm:flex-none"}>
               Select All
             </Button>
-
-            <Button variant="secondary" onClick={clearAll}>
+            <Button variant="secondary" onClick={clearAll} className={"flex-1 sm:flex-none"}>
               Clear
             </Button>
           </div>
-
-          <table className="w-full text-sm border border-gray-300">
-            <thead className="bg-gray-200">
+          <div className="overflow-auto border rounded-lg max-h-[45vh]">
+          <table className="min-w-[950px] md:min-w-full text-xs md:text-sm w-full border-collapse border-gray-300">
+            <thead className="bg-gray-200 sticky top-0 z-10">
               <tr>
                 <th className="border p-2">Use</th>
                 <th className="border p-2">Point</th>
@@ -152,9 +151,10 @@ export default function SnoopingDialog({
               })}
             </tbody>
           </table>
+          </div>
         </div>
 
-        <DialogFooter className="px-6 py-4 border-t flex flex-col items-start gap-3">
+        <DialogFooter className="px-4 md:px-6 pt-4 pb-6 md:pb-4 border-t flex flex-col items-start gap-3">
 
   {/* INFO */}
   <div className="flex flex-col gap-2 text-sm text-gray-700 w-full">
@@ -168,7 +168,7 @@ export default function SnoopingDialog({
     </div>
 
     {/* STATUS */}
-    <div className="flex items-center gap-6">
+    <div className="flex flex-row gap-2 items-center md:gap-6">
 
       <span className="flex items-center gap-2">
         <Check className="w-4 h-4 text-green-600" />
@@ -187,15 +187,6 @@ export default function SnoopingDialog({
     <div className="text-gray-500 leading-relaxed">
       Tidak memenuhi uji Fisher menunjukkan bahwa data kemungkinan mengandung kesalahan kasar. Pengguna dapat menghapus data tersebut dengan melakukan unselect pada titik terkait.
     </div>
-  </div>
-
-  {/* BUTTON */}
-  <div className="flex justify-end">
-    <DialogClose asChild>
-      <Button variant="outline">
-        Tutup
-      </Button>
-    </DialogClose>
   </div>
   
         </DialogFooter>
