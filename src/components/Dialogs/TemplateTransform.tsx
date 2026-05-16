@@ -27,10 +27,10 @@ export default function TemplateTransform({
 
     if(type==="cartesian"){
       filePath=
-      "/template-hitungparams-kartesi.xlsx";
+      "/template-transform-kartesi.xlsx";
     } else {
       filePath=
-      "/template-hitungparams-geodetik.xlsx";
+      "/template-transform-geodetik.xlsx";
     }
 
     const link =
