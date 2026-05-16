@@ -91,7 +91,7 @@ export default function EditStatus({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] md:w-[80vw] !max-w-[800px] p-0">
+      <DialogContent className="w-[98vw] md:w-[80vw] lg:max-w-[1000px] max-h-[90vh] p-0">
 
         {/* HEADER */}
         <DialogHeader className="px-6 py-4 border-b">
@@ -99,7 +99,7 @@ export default function EditStatus({
         </DialogHeader>
 
         {/* CONTENT */}
-        <div className="px-6 py-1 space-y-4">
+        <div className="px-4 md:px-6 py-2 space-y-4 max-h-[70vh] overflow-y-auto">
 
           {/* CONFIDENCE */}
           <div className="flex flex-col items-start gap-2 md:flex-row md:items-center mb-4">
@@ -118,9 +118,21 @@ export default function EditStatus({
           </div>
 
           {/* TABLE HEADER (FIXED) */}
-          <div className="h-[45vh] overflow-auto border rounded-lg">
+          <div className="h-[45vh] overflow-x-auto
+overflow-y-auto
+md:overflow-visible border rounded-lg">
 
-  <table className="min-w-[650px]w-full table-fixed text-xs md:text-sm border-collapse">
+  <table className="min-w-[650px]
+md:min-w-full
+
+w-full
+table-fixed
+
+text-xs
+md:text-sm
+
+border-collapse
+">
 
     {/*FIX LEBAR KOLOM */}
     <colgroup>
@@ -190,16 +202,21 @@ export default function EditStatus({
 </div>
 
           {/* FOOTER FIXED */}
-          <div className="mt-2 border rounded-lg overflow-hidden text-sm">
+          <div className="mt-2 border rounded-lg overflow-x-auto md:overflow-visible">
 
-  <table className="w-full table-fixed border-collapse">
+  <table className="min-w-[650px]
+md:min-w-full
+w-full
+table-fixed
+border-collapse
+text-xs md:text-sm">
 
     <colgroup>
-      <col className="w-[20%]" />
-      <col className="w-[20%]" />
-      <col className="w-[20%]" />
-      <col className="w-[20%]" />
-      <col className="w-[20%]" />
+      <col className="w-[140px]" />
+      <col className="w-[120px]" />
+      <col className="w-[120px]" />
+      <col className="w-[120px]" />
+      <col className="w-[120px]" />
     </colgroup>
 
     <tbody className="bg-gray-100 font-semibold">
@@ -228,7 +245,7 @@ export default function EditStatus({
         </div>
 
         {/* FOOTER BUTTON */}
-        <DialogFooter className="px-4 md:px-6 py-3 border-t flex flex-col md:flex-row md:items-center">
+        <DialogFooter className="px-4 md:px-6 py-3 border-t flex flex-col gap-4 md:flex-row md:items-center">
 
           {/* LEGEND */}
           <div className="grid grid-cols-1 md:flex gap-3 text-xs md:text-sm">
@@ -248,7 +265,7 @@ export default function EditStatus({
             <Button
               onClick={onSubmit}
               disabled={loading}
-              className="w-full md:w-auto bg-emerald-700 hover:bg-emerald-800 flex items-center gap-2"
+              className="w-full md:w-auto bottom-0 bg-emerald-700 hover:bg-emerald-800 flex items-center gap-2"
             >
               {loading && <Spinner />}
               {loading ? "Processing..." : "Recalculate"}
