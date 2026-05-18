@@ -21,7 +21,7 @@ export async function DELETE(req: NextRequest) {
   } catch (error) {
     console.error(error);
     return NextResponse.json(
-      { error: "Gagal hapus project" },
+      { error: "Gagal menghapus project" },
       { status: 500 }
     );
   }

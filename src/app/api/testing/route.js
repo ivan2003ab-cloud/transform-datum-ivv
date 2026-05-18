@@ -18,7 +18,6 @@ export async function POST(req) {
       rmse,
     });
   } catch (err) {
-    console.error("ERROR TEST:", err);
     return Response.json({ error: "Server error" }, { status: 500 });
   }
 }

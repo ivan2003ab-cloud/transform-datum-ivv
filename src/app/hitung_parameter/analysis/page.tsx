@@ -32,60 +32,54 @@ export default function AnalysisPage() {
   const [jumlahSekutu, setJumlahSekutu] = useState(0);
   const [jumlahUji, setJumlahUji] = useState(0);
   useEffect(() => {
-  const alreadySeen = localStorage.getItem(
-    "guide-analysis-page"
-  );
+    const alreadySeen = localStorage.getItem("guide-analysis-page");
 
-  if (!alreadySeen) {
-    setTimeout(() => {
-      startAnalysisGuide();
-    }, 700);
+    if (!alreadySeen) {
+      setTimeout(() => {startAnalysisGuide();}, 700);
+      localStorage.setItem(
+        "guide-analysis-page",
+        "true"
+      );
+    }
+  }, []);
 
-    localStorage.setItem(
-      "guide-analysis-page",
-      "true"
+  useEffect(() => {
+    const stored = localStorage.getItem("hasil");
+    const raw = localStorage.getItem("rawInput");
+
+    if (!stored || !raw) return;
+
+    const parsed = JSON.parse(stored);
+    const rawData = JSON.parse(raw);
+
+    parsed.pre.allData = rawData;
+
+    setData(parsed);
+
+    const metodeLS = localStorage.getItem("metode");
+    if (metodeLS) setMetode(metodeLS);
+  }, []);
+
+  useEffect(() => {
+    if (!data?.pre?.allData) return;
+    const rawData = data.pre.allData;
+
+    const count = rawData.reduce(
+      (acc: { sekutu: number; uji: number }, item: any) => {
+        const status = item.status?.toLowerCase().trim();
+
+        if (status === "sekutu" && item.selected === "selected") acc.sekutu++;
+        else if (status === "uji") acc.uji++;
+
+        return acc;
+      },
+      { sekutu: 0, uji: 0 }
     );
-  }
-}, []);
 
-useEffect(() => {
-  const stored = localStorage.getItem("hasil");
-  const raw = localStorage.getItem("rawInput");
+    setJumlahSekutu(count.sekutu);
+    setJumlahUji(count.uji);
 
-  if (!stored || !raw) return;
-
-  const parsed = JSON.parse(stored);
-  const rawData = JSON.parse(raw);
-
-  // penting: inject raw terbaru
-  parsed.pre.allData = rawData;
-
-  setData(parsed);
-
-  const metodeLS = localStorage.getItem("metode");
-  if (metodeLS) setMetode(metodeLS);
-}, []);
-useEffect(() => {
-  if (!data?.pre?.allData) return;
-
-  const rawData = data.pre.allData;
-
-  const count = rawData.reduce(
-    (acc: { sekutu: number; uji: number }, item: any) => {
-      const status = item.status?.toLowerCase().trim();
-
-      if (status === "sekutu" && item.selected === "selected") acc.sekutu++;
-      else if (status === "uji") acc.uji++;
-
-      return acc;
-    },
-    { sekutu: 0, uji: 0 }
-  );
-
-  setJumlahSekutu(count.sekutu);
-  setJumlahUji(count.uji);
-
-}, [data]);
+  }, [data]);
 
   const openEditStatus = () => {
     const raw = JSON.parse(localStorage.getItem("rawInput") || "[]");
@@ -93,57 +87,58 @@ useEffect(() => {
     setOpenModal("editStatus");
   };
   const snoopRows = useMemo(() => {
-  if (!data || !data.adj || !data.test) return [];
+    if (!data || !data.adj || !data.test) return [];
 
-  const raw = data.pre.allData || [];
+    const raw = data.pre.allData || [];
 
-  const sekutu = raw.filter(
-    (d: any) => d.status?.toLowerCase().trim() === "sekutu"
-  );
+    const sekutu = raw.filter(
+      (d: any) => d.status?.toLowerCase().trim() === "sekutu"
+    );
 
-  const v = data.adj.v || [];
-  const std = data.test.snoop.sqrtDiag || [];
-  const res = data.test.snoop.result || [];
+    const v = data.adj.v || [];
+    const std = data.test.snoop.sqrtDiag || [];
+    const res = data.test.snoop.result || [];
 
-  let calcIndex = 0;
+    let calcIndex = 0;
 
-  return sekutu.map((row: any) => {
-    const active = row.selected === "selected";
+    return sekutu.map((row: any) => {
+      const active = row.selected === "selected";
 
-    if (!active) {
+      if (!active) {
+        return {
+          no: row.point,
+          selected: row.selected,
+          vx: null,
+          vy: null,
+          vz: null,
+          svx: null,
+          svy: null,
+          svz: null,
+          statusX: null,
+          statusY: null,
+          statusZ: null,
+        };
+      }
+
+      const base = calcIndex * 3;
+      calcIndex++;
+
       return {
         no: row.point,
         selected: row.selected,
-        vx: null,
-        vy: null,
-        vz: null,
-        svx: null,
-        svy: null,
-        svz: null,
-        statusX: null,
-        statusY: null,
-        statusZ: null,
+        vx: v[base]?.[0] ?? v[base],
+        vy: v[base + 1]?.[0] ?? v[base + 1],
+        vz: v[base + 2]?.[0] ?? v[base + 2],
+        svx: std[base],
+        svy: std[base + 1],
+        svz: std[base + 2],
+        statusX: res[base],
+        statusY: res[base + 1],
+        statusZ: res[base + 2],
       };
-    }
+    });
+  }, [data]);
 
-    const base = calcIndex * 3;
-    calcIndex++;
-
-    return {
-      no: row.point,
-      selected: row.selected,
-      vx: v[base]?.[0] ?? v[base],
-      vy: v[base + 1]?.[0] ?? v[base + 1],
-      vz: v[base + 2]?.[0] ?? v[base + 2],
-      svx: std[base],
-      svy: std[base + 1],
-      svz: std[base + 2],
-      statusX: res[base],
-      statusY: res[base + 1],
-      statusZ: res[base + 2],
-    };
-  });
-}, [data]);
   const formatParameter = () => {
     const params = data?.adj?.params || [];
     const xVar = data?.adj?.xVar || [];
@@ -176,43 +171,43 @@ useEffect(() => {
   };
   const handleRecalculate = async (rawData: any) => {
     const jumlahSekutuAktif = rawData.filter(
-    (item: any) =>
-      item.status?.toLowerCase().trim() === "sekutu" &&
-      item.selected === "selected"
-  ).length;
+      (item: any) =>
+        item.status?.toLowerCase().trim() === "sekutu" &&
+        item.selected === "selected"
+    ).length;
 
-  if (jumlahSekutuAktif < 3) {
-    alert("Minimal diperlukan 3 titik sekutu aktif.");
-    return;
-  }
-   localStorage.setItem("rawInput", JSON.stringify(rawData));
+    if (jumlahSekutuAktif < 3) {
+      alert("Minimal diperlukan 3 titik sekutu aktif.");
+      return;
+    }
+    localStorage.setItem("rawInput", JSON.stringify(rawData));
 
-  const result = await runAdjustment(rawData, metode!);
+    const result = await runAdjustment(rawData, metode!);
 
-  result.pre.allData = rawData;
+    result.pre.allData = rawData;
 
-  setData(result);
-  localStorage.setItem("hasil", JSON.stringify(result));
-};
+    setData(result);
+    localStorage.setItem("hasil", JSON.stringify(result));
+  };
+
   const buildMapData = () => {
     if (!data) return [];
 
-  const raw = JSON.parse(localStorage.getItem("rawInput") || "[]");
-  const vVar = data?.adj?.vVar || [];
+    const raw = JSON.parse(localStorage.getItem("rawInput") || "[]");
+    const vVar = data?.adj?.vVar || [];
 
-  const sekutuSelected = raw.filter(
-    (row:any) =>
-      row.status?.toLowerCase().trim() === "sekutu" &&
-      row.selected === "selected"
-  );
+    const sekutuSelected = raw.filter(
+      (row:any) =>
+        row.status?.toLowerCase().trim() === "sekutu" &&
+        row.selected === "selected"
+    );
 
-  const result = [];
+    const result = [];
 
-  for (let i = 0; i < sekutuSelected.length; i++) {
-    const base = i * 3;
-    const row = sekutuSelected[i];
+    for (let i = 0; i < sekutuSelected.length; i++) {
+      const base = i * 3;
+      const row = sekutuSelected[i];
 
-    
       const geo = ecefToGeodetic(row.x2, row.y2, row.z2);
 
       const varX = vVar[base]?.[base] ?? 0;
@@ -335,44 +330,44 @@ useEffect(() => {
 
     <Tabs defaultValue="map" className="w-full">
 
-  {/* TAB SWITCH */}
-  <div  className="w-full flex justify-center">
-    <TabsList id="tampilan-residu" className="bg-white border rounded-xl p-1 shadow">
-      <TabsTrigger value="map" className="
-    px-4 py-1 rounded-lg transition
-    data-[state=active]:bg-gradient-to-r
-    data-[state=active]:from-blue-600
-    data-[state=active]:to-emerald-600
-    data-[state=active]:text-white
-  ">Peta</TabsTrigger>
-      <TabsTrigger value="chart" className="
-    px-4 py-1 rounded-lg transition
-    data-[state=active]:bg-gradient-to-r
-    data-[state=active]:from-blue-600
-    data-[state=active]:to-emerald-600
-    data-[state=active]:text-white
-  ">Grafik</TabsTrigger>
-    </TabsList>
-  </div>
+    {/* TAB SWITCH */}
+    <div  className="w-full flex justify-center">
+      <TabsList id="tampilan-residu" className="bg-white border rounded-xl p-1 shadow">
+        <TabsTrigger value="map" className="
+          px-4 py-1 rounded-lg transition
+          data-[state=active]:bg-gradient-to-r
+          data-[state=active]:from-blue-600
+          data-[state=active]:to-emerald-600
+          data-[state=active]:text-white
+        ">Peta</TabsTrigger>
+        <TabsTrigger value="chart" className="
+          px-4 py-1 rounded-lg transition
+          data-[state=active]:bg-gradient-to-r
+          data-[state=active]:from-blue-600
+          data-[state=active]:to-emerald-600
+          data-[state=active]:text-white
+          ">Grafik</TabsTrigger>
+        </TabsList>
+    </div>
 
-  {/* CONTENT WRAPPER */}
-  <div id="content-wrapper" className="relative w-full h-[45vh] min-h-[300px] max-h-[500px] rounded-3xl border border-gray-200 overflow-hidden">
+    {/* CONTENT WRAPPER */}
+    <div id="content-wrapper" className="relative w-full h-[45vh] min-h-[300px] max-h-[500px] rounded-3xl border border-gray-200 overflow-hidden">
 
-    <TabsContent value="map" className="h-full mt-0">
-      <MapParamAnalysis data={buildMapData()} />
-    </TabsContent>
+      <TabsContent value="map" className="h-full mt-0">
+        <MapParamAnalysis data={buildMapData()} />
+      </TabsContent>
 
-    <TabsContent value="chart" className="h-full mt-0">
-      <ResidualChart
-        raw={data?.pre?.allData || []}
-        v={data?.adj?.v || []}
-        rmse={data?.test?.rmse}
-      />
-    </TabsContent>
+      <TabsContent value="chart" className="h-full mt-0">
+        <ResidualChart
+          raw={data?.pre?.allData || []}
+          v={data?.adj?.v || []}
+          rmse={data?.test?.rmse}
+        />
+      </TabsContent>
 
-  </div>
+    </div>
 
-</Tabs>
+    </Tabs>
     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
       <div id="jumlah-titik" className="grid grid-cols-1 md:flex gap-3">
         <div className="px-5 py-2 border border-blue-300 text-blue-600 rounded-xl text-sm font-medium bg-blue-50">
@@ -383,23 +378,22 @@ useEffect(() => {
         </div>
       </div>
 
-  <button
-  id="edit-status-button"
-  onClick={openEditStatus}
-  className="
-    px-4 md:px-6 py-2 flex items-center gap-2
-    bg-gradient-to-r from-emerald-700 to-emerald-600
-    text-white rounded-full text-sm font-semibold
-    transition-all duration-200
-    hover:-translate-y-1 hover:scale-[1.03]
-    hover:shadow-lg active:scale-[0.97]
-  "
->
-  <Pencil size={16} />
-    Edit Status Titik
+      <button
+        id="edit-status-button"
+        onClick={openEditStatus}
+        className="
+          px-4 md:px-6 py-2 flex items-center gap-2
+          bg-gradient-to-r from-emerald-700 to-emerald-600
+          text-white rounded-full text-sm font-semibold
+          transition-all duration-200
+          hover:-translate-y-1 hover:scale-[1.03]
+          hover:shadow-lg active:scale-[0.97]"
+      >
+        <Pencil size={16} />
+        Edit Status Titik
 
-</button>
-</div>
+      </button>
+    </div>
       {/* RESULT LIST */}
       <div id="hasil-pengujian" className="space-y-4">
         {/* Uji Global */}
@@ -420,8 +414,7 @@ useEffect(() => {
           <button
             onClick={() => setOpenModal("global")}
             className="px-6 py-2 rounded-full bg-gradient-to-r from-blue-900 to-blue-700 text-white hover:bg-blue-800 transition-all duration-200
-  hover:-translate-y-1 hover:scale-[1.03]
-  hover:shadow-lg active:scale-[0.97]"
+                      hover:-translate-y-1 hover:scale-[1.03] hover:shadow-lg active:scale-[0.97]"
           >
             Detail
           </button>
@@ -434,8 +427,8 @@ useEffect(() => {
           <button
             onClick={() => setOpenModal("snooping")}
             className="px-6 py-2 rounded-full bg-gradient-to-r from-blue-900 to-blue-700 text-white hover:bg-blue-800 transition-all duration-200
-  hover:-translate-y-1 hover:scale-[1.03]
-  hover:shadow-lg active:scale-[0.97]"
+              hover:-translate-y-1 hover:scale-[1.03]
+              hover:shadow-lg active:scale-[0.97]"
           >
             Detail
           </button>
@@ -448,8 +441,8 @@ useEffect(() => {
           <button
             onClick={() => setOpenModal("rmse")}
             className="px-6 py-2 rounded-full bg-gradient-to-r from-blue-900 to-blue-700 text-white hover:bg-blue-800 transition-all duration-200
-  hover:-translate-y-1 hover:scale-[1.03]
-  hover:shadow-lg active:scale-[0.97]"
+              hover:-translate-y-1 hover:scale-[1.03]
+              hover:shadow-lg active:scale-[0.97]"
           >
             Detail
           </button>
@@ -578,43 +571,42 @@ useEffect(() => {
       </div>
       </div>
 
-      {/* MODAL */}
   <EditStatus
-  open={openModal === "editStatus"}
-  onOpenChange={(v:any) => !v && setOpenModal(null)}
-  editData={editData}
-  setEditData={setEditData}
-  handleRecalculate={handleRecalculate}
-/>
-<UjiGlobal
-  open={openModal === "global"}
-  onOpenChange={(v:any) => !v && setOpenModal(null)}
-  data={data}
-/>
+    open={openModal === "editStatus"}
+    onOpenChange={(v:any) => !v && setOpenModal(null)}
+    editData={editData}
+    setEditData={setEditData}
+    handleRecalculate={handleRecalculate}
+  />
+  <UjiGlobal
+    open={openModal === "global"}
+    onOpenChange={(v:any) => !v && setOpenModal(null)}
+    data={data}
+  />
 
-<RmseDialog
-  open={openModal === "rmse"}
-  onOpenChange={(v:any) => !v && setOpenModal(null)}
-  data={data}
-/>
+  <RmseDialog
+    open={openModal === "rmse"}
+    onOpenChange={(v:any) => !v && setOpenModal(null)}
+    data={data}
+  />
 
-<SaveProject
-  open={openModal === "save"}
-  onOpenChange={(v:any) => !v && setOpenModal(null)}
-  projectName={projectName}
-  setProjectName={setProjectName}
-  handleSave={handleSave}
-  saving={saving}
-  saved={saved}
-/>
+  <SaveProject
+    open={openModal === "save"}
+    onOpenChange={(v:any) => !v && setOpenModal(null)}
+    projectName={projectName}
+    setProjectName={setProjectName}
+    handleSave={handleSave}
+    saving={saving}
+    saved={saved}
+  />
 
-<DataSnooping
-  open={openModal === "snooping"}
-  onOpenChange={(v:any) => !v && setOpenModal(null)}
-  snoopRows={snoopRows}
-  rawData={data?.pre?.allData}
-  handleRecalculate={handleRecalculate}
-  fTabel={data?.test?.snoop?.fTabel}
-/>
-</div>
-)};
+  <DataSnooping
+    open={openModal === "snooping"}
+    onOpenChange={(v:any) => !v && setOpenModal(null)}
+    snoopRows={snoopRows}
+    rawData={data?.pre?.allData}
+    handleRecalculate={handleRecalculate}
+    fTabel={data?.test?.snoop?.fTabel}
+  />
+  </div>
+  )};

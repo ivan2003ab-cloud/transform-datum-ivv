@@ -25,6 +25,6 @@ export async function GET(req: Request) {
     return NextResponse.json(projects);
   } catch (err) {
     console.error(err);
-    return NextResponse.json({ error: "Gagal ambil data" }, { status: 500 });
+    return NextResponse.json({ error: "Gagal mengambil data" }, { status: 500 });
   }
 }

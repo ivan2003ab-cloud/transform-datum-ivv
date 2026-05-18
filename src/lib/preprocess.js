@@ -15,7 +15,7 @@ export function bwMatrix(data, metode) {
     row => row.status?.toLowerCase().trim() === "uji"
   );
 
-  // === 2. HITUNG RATA2 (HANYA SEKUTU) ===
+  // === 2. HITUNG RATA2  ===
   const avgX = math.mean(dataSekutu.map(row => row.x1));
   const avgY = math.mean(dataSekutu.map(row => row.y1));
   const avgZ = math.mean(dataSekutu.map(row => row.z1));

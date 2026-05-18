@@ -118,128 +118,238 @@ export default function EditStatus({
           </div>
 
           {/* TABLE HEADER (FIXED) */}
-          <div className="h-[45vh] overflow-x-auto
-overflow-y-auto
-md:overflow-visible border rounded-lg">
+          {/* TABLE */}
+<div className="border rounded-lg overflow-hidden">
 
-  <table className="min-w-[650px]
-md:min-w-full
+  {/* SCROLL AREA */}
+  <div className="h-[45vh] overflow-auto">
 
-w-full
-table-fixed
+    <table
+      className="
+      min-w-[650px]
+      md:min-w-full
+      w-full
+      table-fixed
+      border-collapse
+      text-xs
+      md:text-sm
+    "
+    >
+      <colgroup>
+        <col className="w-[20%]" />
+        <col className="w-[20%]" />
+        <col className="w-[20%]" />
+        <col className="w-[20%]" />
+        <col className="w-[20%]" />
+      </colgroup>
 
-text-xs
-md:text-sm
+      {/* HEADER */}
+      <thead className="sticky top-0 z-20 bg-slate-800 text-white">
 
-border-collapse
-">
+        <tr>
+          <th className="p-2 text-center">
+            Point
+          </th>
 
-    {/*FIX LEBAR KOLOM */}
-    <colgroup>
-      <col className="w-[20%]" />
-      <col className="w-[20%]" />
-      <col className="w-[20%]" />
-      <col className="w-[20%]" />
-      <col className="w-[20%]" />
-    </colgroup>
+          <th className="p-2 text-center">
+            ΔX
+          </th>
 
-    {/* HEADER */}
-    <thead className="bg-slate-800 text-white sticky top-0">
-      <tr>
-        <th className="p-2 text-center">Point</th>
-        <th className="p-2 text-center">ΔX</th>
-        <th className="p-2 text-center">ΔY</th>
-        <th className="p-2 text-center">ΔZ</th>
-        <th className="p-2 text-center">Status</th>
-      </tr>
-    </thead>
+          <th className="p-2 text-center">
+            ΔY
+          </th>
 
-    {/* BODY */}
-    <tbody>
-      {editData.map((row: any, i: number) => {
-        const dx = (row.x2 ?? 0) - (row.x1 ?? 0);
-        const dy = (row.y2 ?? 0) - (row.y1 ?? 0);
-        const dz = (row.z2 ?? 0) - (row.z1 ?? 0);
+          <th className="p-2 text-center">
+            ΔZ
+          </th>
 
-        return (
-          <tr key={i} className={i % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+          <th className="p-2 text-center">
+            Status
+          </th>
+        </tr>
 
-            <td className="p-2 text-center border">{row.point}</td>
+      </thead>
 
-            <td className={`p-2 text-center border ${getColor(dx, stats.meanDx, stats.stdDx)}`}>
-              {dx.toFixed(3)}
-            </td>
+      <tbody>
+        {editData.map((row: any, i: number) => {
 
-            <td className={`p-2 text-center border ${getColor(dy, stats.meanDy, stats.stdDy)}`}>
-              {dy.toFixed(3)}
-            </td>
+          const dx =
+            (row.x2 ?? 0) -
+            (row.x1 ?? 0);
 
-            <td className={`p-2 text-center border ${getColor(dz, stats.meanDz, stats.stdDz)}`}>
-              {dz.toFixed(3)}
-            </td>
+          const dy =
+            (row.y2 ?? 0) -
+            (row.y1 ?? 0);
 
-            <td className="p-2 text-center border">
-              <select
-                value={row.status}
-                onChange={(e) => {
-                  const updated = [...editData];
-                  updated[i].status = e.target.value;
-                  setEditData(updated);
-                }}
-                className="border rounded px-1 md:px-2 py-1 text-xs md:text-sm"
+          const dz =
+            (row.z2 ?? 0) -
+            (row.z1 ?? 0);
+
+          return (
+
+            <tr
+              key={i}
+              className={
+                i % 2 === 0
+                  ? "bg-white"
+                  : "bg-gray-50"
+              }
+            >
+
+              <td className="border p-2 text-center">
+                {row.point}
+              </td>
+
+              <td
+                className={`border p-2 text-center ${getColor(
+                  dx,
+                  stats.meanDx,
+                  stats.stdDx
+                )}`}
               >
-                <option value="sekutu">sekutu</option>
-                <option value="uji">uji</option>
-              </select>
-            </td>
+                {dx.toFixed(3)}
+              </td>
 
-          </tr>
-        );
-      })}
-    </tbody>
+              <td
+                className={`border p-2 text-center ${getColor(
+                  dy,
+                  stats.meanDy,
+                  stats.stdDy
+                )}`}
+              >
+                {dy.toFixed(3)}
+              </td>
 
-  </table>
-</div>
+              <td
+                className={`border p-2 text-center ${getColor(
+                  dz,
+                  stats.meanDz,
+                  stats.stdDz
+                )}`}
+              >
+                {dz.toFixed(3)}
+              </td>
 
-          {/* FOOTER FIXED */}
-          <div className="mt-2 border rounded-lg overflow-x-auto md:overflow-visible">
+              <td className="border p-2 text-center">
 
-  <table className="min-w-[650px]
-md:min-w-full
-w-full
-table-fixed
-border-collapse
-text-xs md:text-sm">
+                <select
+                  value={row.status}
+                  onChange={(e) => {
+                    const updated =
+                      [...editData];
 
-    <colgroup>
-      <col className="w-[140px]" />
-      <col className="w-[120px]" />
-      <col className="w-[120px]" />
-      <col className="w-[120px]" />
-      <col className="w-[120px]" />
-    </colgroup>
+                    updated[i].status =
+                      e.target.value;
 
-    <tbody className="bg-gray-100 font-semibold">
+                    setEditData(updated);
+                  }}
+                  className="
+                  border
+                  rounded
+                  px-2
+                  py-1
+                  text-xs
+                  md:text-sm
+                  w-full
+                  max-w-[100px]
+                "
+                >
+                  <option value="sekutu">
+                    sekutu
+                  </option>
 
-      <tr>
-        <td className="p-2 text-center border">Rata-rata</td>
-        <td className="p-2 text-center border">{stats.meanDx.toFixed(3)}</td>
-        <td className="p-2 text-center border">{stats.meanDy.toFixed(3)}</td>
-        <td className="p-2 text-center border">{stats.meanDz.toFixed(3)}</td>
-        <td className="border"></td>
-      </tr>
+                  <option value="uji">
+                    uji
+                  </option>
 
-      <tr>
-        <td className="p-2 text-center border">Simpangan Baku</td>
-        <td className="p-2 text-center border">{stats.stdDx.toFixed(3)}</td>
-        <td className="p-2 text-center border">{stats.stdDy.toFixed(3)}</td>
-        <td className="p-2 text-center border">{stats.stdDz.toFixed(3)}</td>
-        <td className="border"></td>
-      </tr>
+                </select>
 
-    </tbody>
+              </td>
 
-  </table>
+            </tr>
+
+          );
+        })}
+      </tbody>
+
+    </table>
+
+  </div>
+
+
+  {/* STATS */}
+  <div className="border-t overflow-auto">
+
+    <table
+      className="
+      min-w-[650px]
+      md:min-w-full
+      w-full
+      table-fixed
+      border-collapse
+      text-xs
+      md:text-sm
+      bg-gray-100
+      font-semibold
+    "
+    >
+
+      <colgroup>
+        <col className="w-[20%]" />
+        <col className="w-[20%]" />
+        <col className="w-[20%]" />
+        <col className="w-[20%]" />
+        <col className="w-[20%]" />
+      </colgroup>
+
+      <tbody>
+
+        <tr>
+          <td className="border p-2 text-center">
+            Rata-rata
+          </td>
+
+          <td className="border p-2 text-center">
+            {stats.meanDx.toFixed(3)}
+          </td>
+
+          <td className="border p-2 text-center">
+            {stats.meanDy.toFixed(3)}
+          </td>
+
+          <td className="border p-2 text-center">
+            {stats.meanDz.toFixed(3)}
+          </td>
+
+          <td className="border"></td>
+        </tr>
+
+        <tr>
+          <td className="border p-2 text-center">
+            Simpangan Baku
+          </td>
+
+          <td className="border p-2 text-center">
+            {stats.stdDx.toFixed(3)}
+          </td>
+
+          <td className="border p-2 text-center">
+            {stats.stdDy.toFixed(3)}
+          </td>
+
+          <td className="border p-2 text-center">
+            {stats.stdDz.toFixed(3)}
+          </td>
+
+          <td className="border"></td>
+        </tr>
+
+      </tbody>
+
+    </table>
+
+  </div>
+
 </div>
 
         </div>
